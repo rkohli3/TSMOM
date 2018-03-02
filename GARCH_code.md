@@ -55,12 +55,10 @@ def get_inst_vol(y,
     
     series of conditioanl volatility. 
     """
-    ```  
+```  
 
-<br>    
-<br>    
-<br>    
-<br> 
+
+
 The above function will fit the GARCH(1,1) model to a time series and estimate the instantaneous volatility for the time series.
 
 
@@ -116,10 +114,8 @@ Let the code begin
     elif isinstance(inst_vol, np.ndarray):
         inst_vol = inst_vol
     # more interested in conditional vol
-    return inst_vol
-    ```
-<br>
-<br>
+    return inst_vol
+```
 
 
 - The first part of the code checks for the type of data we have entered. Is it in a series or a numpy array. Accordingly it then removes the null values. This is important as data with null value can't have a model fit to it.<br><br><br>
