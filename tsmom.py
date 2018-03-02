@@ -687,7 +687,9 @@ def get_monthly_heatmap(returns,
                                         reversescale = True,
                                         hoverinfo = "y+z",
                                         showscale = True,
-                                        font_colors= ['white', 'black'])
+                                        font_colors= ['white', 'black'], 
+                                        height = 1200, 
+                                        width = 800)
     for i in range(len(fighm.layout.annotations)):
         fighm.layout.annotations[i].font.size = font_size
 
@@ -698,7 +700,7 @@ def get_monthly_heatmap(returns,
     fighm['layout']['yaxis']['dtick'] = 3
     fighm['layout']['yaxis']['tick0'] = 2
     # fighm.layout.xaxis.title = 'Months'
-    return iplot(fighm, show_link= False, image_height= 1200)
+    return iplot(fighm, show_link= False, image_width = width, image_height= 1200)
 
 def get_monthly_hist(series, height = 400, width = 900):
     """F: to plot histogram of monthly returns
@@ -779,8 +781,8 @@ def underwater(series, s_name = None, width = 900, height = 400, color = 'red'):
                                        'paper_bgcolor': 'white',
     #                                    'hovermode': 'closest',
                                        'margin': dict(t = 40, pad = -40),
-                                       'width': 900,
-                                       'height': 400,
+                                       'width': width,
+                                       'height': height,
                                        'xaxis' : dict(title = 'Dates',
                                                       showgrid = False,
                                                       showticklabels = True,
