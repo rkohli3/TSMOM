@@ -1,4 +1,4 @@
-For access to the jupyter notebook with interactivity, please click on this link: http://nbviewer.jupyter.org/github/rkohli3/TSMOM/blob/master/_TSMOM_replicate.ipynb
+For access to the jupyter notebook with interactivity, please click on this link: http://nbviewer.jupyter.org/github/rkohli3/TSMOM/blob/master/momentum.ipynb
 
 # Time Series Momentum (TSMOM)
 <br>
