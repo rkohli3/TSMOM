@@ -1,4 +1,7 @@
-For access to the jupyter notebook with interactivity, please click on this link: http://nbviewer.jupyter.org/github/rkohli3/TSMOM/blob/master/momentum.ipynb
+For access to the jupyter notebook with interactivity containing the CTA strategy, please click on this link: http://nbviewer.jupyter.org/github/rkohli3/TSMOM/blob/master/momentum.ipynb
+
+To access the jupyter notebook with interactivity for Indian Equities, please click on the link below:
+http://nbviewer.jupyter.org/github/rkohli3/TSMOM/blob/master/MomentumIndia.ipynb
 
 # Time Series Momentum (TSMOM)
 <br>
@@ -6,7 +9,7 @@ For access to the jupyter notebook with interactivity, please click on this link
 
 ## <center> Summary </center>
 
-The following code blocks are based on the Time Series Momentum strategy, TSMOM, as illustrated in the 2011, Moskowitz, Ooi and Pedersen paper. 
+The following code blocks are based on the Time Series Momentum strategy, TSMOM, as illustrated in the 2011, Moskowitz, Ooi and Pedersen paper.
 
 1. **What is TSMOM and how is it different from Momentum mentioned by Jegadeesha and Titman, 2001?**<br>
 TSMOM is a smarket anomaly that captures strong positive predicitibility from a security's own past returns. That is, if the past returns are positive, they will continue to be positive and vice versa. <br> <br>
@@ -18,8 +21,8 @@ I do this in order to backtest results for the highly liquid ETF securities in t
     2. Equity Index
     3. Currencies
     4. Commodities
-    
-  
+
+
 <br>
 <br><br><br>
 Let's get on with it, shall we?!?!
