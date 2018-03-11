@@ -167,7 +167,7 @@ def get_eq_line(series, data = 'returns', ret_type = 'arth', dtime = 'monthly'):
 
     return cum_rets_prd
 
-def get_exante_vol(series, com = 60, dtime = 'monthly', dtype = 'returns'):
+def get_exante_vol(series, alpha = 0.05, com = 60, dtime = 'monthly', dtype = 'returns'):
 
     """F: that provides annualized ex ante volatility based on the method of Exponentially Weighted Average\n
     This method is also know as the Risk Metrics, where the instantaneous volatility is based on past volatility\n
@@ -189,7 +189,7 @@ def get_exante_vol(series, com = 60, dtime = 'monthly', dtype = 'returns'):
     if dtype == 'prices':
         series = get_rets(series, kind = 'arth', freq = 'd')
 
-    vol = series.ewm(com = com).std()
+    vol = series.ewm(alpha = alpha, com = com).std()
     ann_vol = vol * np.sqrt(261)
 
     if dtime == 'daily':
@@ -368,6 +368,8 @@ def get_inst_vol(y,
                  mean = 'Constant',
                  vol = 'Garch',
                  dist = 'normal',
+                 data = 'prices',
+                 freq = 'd',
                  ):
 
     """Fn: to calculate conditional volatility of an array using Garch:
@@ -391,12 +393,19 @@ def get_inst_vol(y,
     ----------
 
     series of conditioanl volatility.
+    
     """
+
+
+    if (data == 'prices') or (data =='price'):
+        y = get_rets(y, kind = 'arth', freq = freq)
+        
     if isinstance(y, pd.core.series.Series):
         ## remove nan.
         y = y.dropna()
-    elif isinstance(y, np.ndarray):
-        y = y[~np.isnan(y)]
+    else:
+        raise TypeError('Data should be time series with index as DateTime')
+        
 
     # provide a model
     model = arch.arch_model(y * 100, mean = 'constant', vol = 'Garch')
@@ -504,6 +513,7 @@ def tsmom(series, mnth_vol, mnth_cum, tolerance = 0, vol_flag = False, scale = 0
 
     returns:
         time series momentum returns"""
+    
     ast = series.name
     df = pd.concat([mnth_vol[ast], mnth_cum[ast], mnth_cum[ast].pct_change(lookback)],
                       axis = 1,
@@ -511,33 +521,49 @@ def tsmom(series, mnth_vol, mnth_cum, tolerance = 0, vol_flag = False, scale = 0
     cum_col = df[ast + '_cum']
     vol_col = df[ast + '_vol']
     lback = df[ast + '_lookback']
-
-    pnl_dict = {}
-    lev_dict = {}
+#    n_longs = []
+#    n_shorts = []
+    pnl_long = {pd.Timestamp(lback.index[lookback]): 0}
+    pnl_short = {pd.Timestamp(lback.index[lookback]): 0}
+    lev_dict = {pd.Timestamp(lback.index[lookback]): 1}
     for k, v in enumerate(lback):
         if k <= lookback:
             continue
         if vol_flag == True:
             leverage = (scale/vol_col[k-1])
             if lback.iloc[k-1] > tolerance:
-                pnl_dict[lback.index[k]] = ((cum_col.iloc[k]/float(cum_col.iloc[k-1])) - 1) * leverage
+                pnl_long[lback.index[k]] = ((cum_col.iloc[k]/float(cum_col.iloc[k-1])) - 1) * leverage
                 lev_dict[lback.index[k]] = leverage
             elif lback.iloc[k-1] < tolerance:
-                pnl_dict[lback.index[k]] = ((cum_col.iloc[k-1]/float(cum_col.iloc[k])) - 1) * leverage
+                pnl_short[lback.index[k]] = ((cum_col.iloc[k-1]/float(cum_col.iloc[k])) - 1) * leverage
                 lev_dict[lback.index[k]] = leverage
         elif vol_flag == False:
             leverage = 1
             if lback.iloc[k-1] > tolerance:
-                pnl_dict[lback.index[k]] = ((cum_col.iloc[k]/float(cum_col.iloc[k-1])) - 1)
+                pnl_long[lback.index[k]] = ((cum_col.iloc[k]/float(cum_col.iloc[k-1])) - 1)
                 lev_dict[lback.index[k]] = leverage
             elif lback.iloc[k-1] < tolerance:
-                pnl_dict[lback.index[k]] = ((cum_col.iloc[k-1]/float(cum_col.iloc[k])) - 1)
+                pnl_short[lback.index[k]] = ((cum_col.iloc[k-1]/float(cum_col.iloc[k])) - 1)
                 lev_dict[lback.index[k]] = leverage
     new_lev = pd.Series(lev_dict)
-    new_series = pd.Series(pnl_dict)
-    new_series.name = ast
+    new_longs = pd.Series(pnl_long)
+    new_shorts = pd.Series(pnl_short)
+    new_longs.name = ast
+    new_shorts.name = ast
     new_lev.name = ast + 'Leverage'
-    return new_series, new_lev
+    return new_longs, new_shorts, new_lev
+
+def get_long_short(mnth_cum, lookback = 12):
+    lback_ret = mnth_cum.pct_change(lookback)
+    lback_ret = lback_ret.dropna(how = 'all')
+    nlongs = lback_ret[lback_ret > 0].count(axis = 1)
+    nshorts = lback_ret[lback_ret < 0].count(axis = 1)
+    nlongs.name = 'Long Positions'
+    nshorts.name = 'Short Positions'
+    nshorts.index.name = None
+    nshorts.index.name = None
+    return pd.concat([nlongs, nshorts], axis = 1)
+
 
 def get_stats(returns, dtime = 'monthly'):
     """Function to calulcte annualized mean, annualized volatility and annualized sharpe ratio
@@ -576,25 +602,45 @@ def get_ts(df):
     return df_ts_df
 
 def get_tsmom(mnth_vol, mnth_cum, flag = False, scale = 0.20, lookback = 12):
-    pnls = mnth_cum.apply(lambda x: tsmom(x, mnth_vol, mnth_cum, scale = scale, vol_flag= flag, lookback= lookback)[0])
-    lev = mnth_cum.apply(lambda x: tsmom(x, mnth_vol, mnth_cum, scale = scale, vol_flag= flag, lookback= lookback)[1])
-    port_pnl = pnls.mean(axis = 1)
-    if flag == False:
-        port_pnl.name = 'TSMOM'
-    elif flag == True:
-        port_pnl.name = 'TSMOM VolScale'
+    total = mnth_cum.apply(lambda x: tsmom(x, mnth_vol, mnth_cum, scale = scale, vol_flag= flag, lookback= lookback)) 
+    pnl_long = pd.concat([i[0] for i in total], axis = 1)
+    pnl_short = pd.concat([i[1] for i in total], axis = 1)
+    lev = pd.concat([i[2] for i in total], axis = 1)
+    port_long = pnl_long.mean(axis = 1)
+    port_short = pnl_short.mean(axis = 1)
+    if flag == True:
+        port_long.name = 'LongPnl VolScale'
+        port_short.name = 'ShortPnl VolScale'
+    port_long.name = 'LongPnl'
+    port_short.name = 'ShortPnl'
+    n_longs = pnl_long.count(axis = 1)
+    n_shorts = pnl_short.count(axis = 1)
 
 #     strat_df = port_pnl.to_frame
     lev_mean = lev.mean(axis =1)
-    lev_mean = lev_mean.rolling(12).mean()
+    lev_mean = lev_mean.rolling(lookback).mean()
     lev_mean.name = 'Leverage'
 
-    return pd.concat([port_pnl, lev_mean], axis = 1)
+    return port_long, port_short, lev_mean
+
+def get_tsmom_port(mnth_vol, mnth_cum, flag = False, scale = 0.2, lookback = 12):
+    port_long, port_short, leverage = get_tsmom(mnth_vol,
+                                                mnth_cum,
+                                                flag = flag,
+                                                scale = scale,
+                                                lookback = lookback)
+    tsmom = port_long.add(port_short, fill_value = 0)
+    if flag == True:
+        tsmom.name = 'TSMOM VolScale'
+    elif flag == False:
+       tsmom.name = 'TSMOM'
+        
+    return pd.concat([tsmom, leverage], axis = 1)
 
 
-# empyrical.alpha(port_pnl, spy_rets, period = 'monthly')
+# empyrical.alpha(port_pnl, bnchmark, period = 'monthly')
 
-def get_perf_att(series, freq = 'monthly'):
+def get_perf_att(series, bnchmark, freq = 'monthly'):
     """F: that provides performance statistic of the returns
     params
     -------
@@ -611,11 +657,11 @@ def get_perf_att(series, freq = 'monthly'):
                                                                     period = freq),
                                              3),
                       'Alpha' : round(empyrical.alpha(series,
-                                                      spy_rets,
+                                                      bnchmark,
                                                       period = freq),
                                       3),
                       'Beta':  round(empyrical.beta(series,
-                                                    spy_rets),
+                                                    bnchmark),
                                      3),
                       'Max Drawdown':  '{:,.2%}'.format(drawdown(series, ret_ = 'nottext')),
                       'Sortino Ratio': round(empyrical.sortino_ratio(series,
@@ -629,7 +675,25 @@ def get_perf_att(series, freq = 'monthly'):
     return perf.to_frame()
 
 
-def matplotlib_to_plotly(cmap):
+##def matplotlib_to_plotly(cmap):
+##    """Converts a matplotlib colormap to plotly colormap or colorscale, which is customized
+##
+##    params:
+##        cmap: str, valid cmap in matplotlib"""
+##
+##    pl_entries = 255
+##    _cmap = matplotlib.cm.get_cmap(cmap)
+##    h = 1/(pl_entries-1)
+##    pl_colorscale = []
+##
+##    for k in range(pl_entries):
+##        C = list(map(np.uint8, np.array(_cmap(k*h)[:3])*(pl_entries)))
+##        pl_colorscale.append([k*h, 'rgb'+str((C[0], C[1], C[2]))])
+##
+##    return pl_colorscale
+
+def matplotlib_to_plotly(cmap, vmin = 0, vmax = 255):
+    norm = matplotlib.colors.Normalize(vmin = vmin, vmax = vmax)
     """Converts a matplotlib colormap to plotly colormap or colorscale, which is customized
 
     params:
@@ -637,21 +701,40 @@ def matplotlib_to_plotly(cmap):
 
     pl_entries = 255
     _cmap = matplotlib.cm.get_cmap(cmap)
-    h = 1.0/(pl_entries-1)
+    h = 1/(pl_entries-1)
     pl_colorscale = []
 
     for k in range(pl_entries):
-        C = list(map(np.uint8, np.array(_cmap(k*h)[:3])*pl_entries))
+        C = list(map(np.uint8, np.array(_cmap(norm(k))[:3])*(pl_entries)))
         pl_colorscale.append([k*h, 'rgb'+str((C[0], C[1], C[2]))])
 
     return pl_colorscale
+
+def plt_cscale(cmap):
+    _cmap = matplotlib.cm.get_cmap(cmap)
+    norm = matplotlib.colors.Normalize(vmin = -100, vmax =100)
+
+    colorscale =[]
+
+    for i in range(255):
+        k = matplotlib.colors.colorConverter.to_rgb(_cmap(norm(i)))
+        colorscale.append(k)
+
+    return colorscale
 
 def get_monthly_heatmap(returns,
                         cmap,
                         font_size = 10,
                         yr_from = None,
                         yr_to = None,
-                        cnvrt = 'monthly'):
+                        cnvrt = 'monthly',
+                        width = 600,
+                        plt_type = 'iplot',
+                        filename = None,
+                        colors = ['white', 'black'],
+                        online = False,
+                        vmin = 0,
+                        vmax = 255):
 
     """F: to plot heatmap of monthly returns:
 
@@ -664,7 +747,8 @@ def get_monthly_heatmap(returns,
         yr_to: (optional) Heatmap year to
         cnvrt = (optional) str, convert returns to
         """
-    cscale = matplotlib_to_plotly(cmap)
+    cscale = matplotlib_to_plotly(cmap, vmin = vmin, vmax = vmax)
+##    cscale = plt_cscale(cmap)
     if yr_to is None:
         yr_to = returns.index[-1].year
     if yr_from is None:
@@ -687,9 +771,7 @@ def get_monthly_heatmap(returns,
                                         reversescale = True,
                                         hoverinfo = "y+z",
                                         showscale = True,
-                                        font_colors= ['white', 'black'], 
-                                        height = 1200, 
-                                        width = 800)
+                                        font_colors= colors)
     for i in range(len(fighm.layout.annotations)):
         fighm.layout.annotations[i].font.size = font_size
 
@@ -700,9 +782,26 @@ def get_monthly_heatmap(returns,
     fighm['layout']['yaxis']['dtick'] = 3
     fighm['layout']['yaxis']['tick0'] = 2
     # fighm.layout.xaxis.title = 'Months'
-    return iplot(fighm, show_link= False, image_width = width, image_height= 1200)
+    if online == False:
+        if plt_type == 'iplot':
+            return iplot(fighm,
+                         show_link= False,
+                         image_width = width,
+                         image_height= 1200)
+        elif plt_type == 'plot':
+            return plot(fighm,
+                        show_link= False,
+                        image_width = width,
+                        image_height= 1200,
+                    filename = filename)
+    elif online == True:
+        return py.iplot(fighm, show_link = False, filename = filename)
 
-def get_monthly_hist(series, height = 400, width = 900):
+def get_monthly_hist(series,
+                     height = 400,
+                     width = 900,
+                     plt_type = 'iplot',
+                     filename = None):
     """F: to plot histogram of monthly returns
 
     params:
@@ -712,8 +811,10 @@ def get_monthly_hist(series, height = 400, width = 900):
 
     returns:
         plotly iplotint"""
-    if len(series) < 500:
+    if (len(series) > 200) and (len(series) < 500):
         nbins = int(len(series)/2)
+    elif len(series) < 200:
+        nbins = int(len(series))
     else:
         nbins = int(len(series)/4)
     hist = series.iplot(kind = 'histogram',
@@ -761,11 +862,25 @@ def get_monthly_hist(series, height = 400, width = 900):
                                                         bgcolor = 'white'),
                                       })
     hist.layout.xaxis.tickformat = '0.00%'
-    return iplot(hist, show_link= False)
+    if online == False:
+        if plt_type == 'iplot':
+            return iplot(hist, show_link= False)
+        elif plt_type == 'plot':
+            return plot(hist, show_link = False, filename = filename)
+    elif online ==True:
+        py.iplot(hist, show_link = False)
 
 
 
-def underwater(series, s_name = None, width = 900, height = 400, color = 'red'):
+def underwater(series,
+               s_name = None,
+               width = 900,
+               height = 400,
+               color = 'red',
+               range = None,
+               plt_type = 'iplot',
+               online = False,
+               filename = None):
     if s_name is not None:
         name = s_name
     name = series.name
@@ -790,12 +905,164 @@ def underwater(series, s_name = None, width = 900, height = 400, color = 'red'):
                                                       color = 'black',
                                                       hoverformat = '%A, %b %d %Y '
                                                      ),
-                                       'yaxis' : dict(title = 'Drawdown',
+                                       'yaxis' : dict(title = 'Drawdown in %',
                                                       showgrid = False,
                                                       showticklabels = True,
                                                       zeroline = True,
-                                                      color = 'black'
+                                                      color = 'black',
+                                                      range = range,
                                                      )
                                       }
                      )
-    return iplot(pyfig, show_link = False)
+    
+    if online == False:
+        if plt_type == 'plot':
+            plot(pyfig, show_link = False, filename = filename)
+        elif plt_type =='iplot':
+            iplot(pyfig, show_link = False)
+    elif online == True:
+        py.iplot(pyfig, show_link = False)
+
+
+def get_ann_ret_plot(ret_series,
+                     height = None,
+                     width = None,
+                     x2range = None):
+    cum_series = get_eq_line(ret_series)
+    av_ann_mean = ret_series.resample('A').mean() * 12
+    av_ann_std = ret_series.resample('A').std() * np.sqrt(12)
+    annual_ret = get_ann_ret(ret_series)
+
+    trace0 = Bar(x = np.round(annual_ret.values * 100,2), 
+                 y = annual_ret.index.year, 
+                 name = 'Total Annual Returns',
+                 marker = dict(color = '#00FA9A', 
+                               line = dict(color = '#006400', 
+                                           width = 1),
+                              ),
+                 yaxis = 'y1',
+                 orientation = 'h',
+                 hoverinfo = 'x'
+                )
+    trace1 = Scatter(x = np.round(av_ann_mean.values * 100,2), 
+                     y = annual_ret.index.year, 
+                     name = 'Average Annual Returns',
+                     mode = 'lines+markers',
+                     line = dict(color = 'black', 
+                                 width = 1, 
+                                 dash = 'dashdot'),
+                     hoverinfo = 'x'
+
+                    )
+
+    trace2 = Scatter(x = np.round(av_ann_std.values * 100,2), 
+                     y = annual_ret.index.year, 
+                     name = 'Annual Volatility', 
+                     mode = 'lines+markers', 
+                     line = dict(color = '#944bd2', 
+                                 width = 1,
+                                 dash = 'longdashdot'
+                                ), 
+                     hoverinfo = 'x'
+                    )
+
+    layout = dict(
+        height = height,
+        width = width,
+        title='Average Annual Returns and Volatilty for {}'.format(ret_series.name),
+        hovermode = 'closest',
+        yaxis1=dict(
+            showgrid=False,
+            zeroline = False, 
+            showticklabels = True,
+            showline=False,
+            linewidth = 0.75,
+            nticks = 30,
+            domain=[0, 0.85],
+
+        ),
+        yaxis2=dict(
+            showgrid=False,
+            showline=True,
+            showticklabels=True,
+            linecolor='rgba(102, 102, 102, 0.8)',
+            linewidth=2,
+            tickangle = 90,
+            domain=[0, 0.85],
+        ),
+        xaxis=dict(
+            zeroline=False,
+            showline=False,
+            showticklabels= True,
+            showgrid=True,
+    #         side = 'top'
+            domain=[0, 0.55],
+        ),
+        xaxis2=dict(
+            zeroline=False,
+            showline=False,
+            showticklabels=True,
+            showgrid=True,
+            domain=[0.58, 1],
+            range = x2range,
+            side='top',
+        ),
+        legend=dict(
+            x=0.029,
+            y=1.038,
+            font=dict(
+                size=10,
+            ),
+        ),
+        margin=dict(
+            l=50,
+            r=50,
+            t=50,
+            b=50,
+        ),
+        paper_bgcolor='rgb(248, 248, 255)',
+        plot_bgcolor='rgb(248, 248, 255)',
+    )
+    x_s = np.round(annual_ret.values * 100,2)
+
+    annots = []
+    for xs, ys in zip(x_s, annual_ret.index.year):
+        if xs > 0:
+            x_loc = xs + 15
+        else:
+            x_loc = 15
+        annots.append(dict(xref = 'x1', 
+                           yref = 'y1', 
+                           x = x_loc, 
+                           y = ys, 
+                           text = str(xs) + '%', 
+                           font = dict(family='Arial', 
+                                       size=12,
+                                       color='#006400'),
+                            showarrow=False
+                          )
+                        )
+    fig = tls.make_subplots(rows=1, cols=2, shared_xaxes=True,
+                            shared_yaxes= False, vertical_spacing=0.001)
+    fig.append_trace(trace0, 1, 1)
+    fig.append_trace(trace1, 1, 2)
+    fig.append_trace(trace2, 1, 2)
+
+
+    layout['annotations'] = annots
+    fig['layout'].update(layout)
+
+    return fig
+#    iplot(fig, show_link= False)
+
+def get_ann_ret(ret_series):
+    cum_series = get_eq_line(ret_series)
+    annual = cum_series.resample('A').last()
+    annual.loc[ret_series.index[0]] = 1
+    annual.sort_index(ascending= True, inplace = True)
+
+    annual_ret = annual.pct_change()
+    annual_ret.index = annual_ret.index.to_period('A')
+    annual_ret.dropna(inplace = True)
+    return annual_ret
+
