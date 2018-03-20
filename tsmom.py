@@ -134,6 +134,7 @@ def get_eq_line(series, data = 'returns', ret_type = 'arth', dtime = 'monthly'):
 
     series.dropna(inplace = True)
 
+
     if data == 'returns':
         rets = series
         if ret_type == 'arth':
@@ -512,7 +513,7 @@ def tsmom(series, mnth_vol, mnth_cum, tolerance = 0, vol_flag = False, scale = 0
         lookback: (optional) int, lookback months
 
     returns:
-        time series momentum returns"""
+    new_longs, new_shorts and leverage"""
     
     ast = series.name
     df = pd.concat([mnth_vol[ast], mnth_cum[ast], mnth_cum[ast].pct_change(lookback)],
@@ -640,7 +641,7 @@ def get_tsmom_port(mnth_vol, mnth_cum, flag = False, scale = 0.2, lookback = 12)
 
 # empyrical.alpha(port_pnl, bnchmark, period = 'monthly')
 
-def get_perf_att(series, bnchmark, freq = 'monthly'):
+def get_perf_att(series, bnchmark, rf = 0.03/12, freq = 'monthly'):
     """F: that provides performance statistic of the returns
     params
     -------
@@ -658,6 +659,7 @@ def get_perf_att(series, bnchmark, freq = 'monthly'):
                                              3),
                       'Alpha' : round(empyrical.alpha(series,
                                                       bnchmark,
+                                                      risk_free = rf,
                                                       period = freq),
                                       3),
                       'Beta':  round(empyrical.beta(series,
@@ -665,7 +667,7 @@ def get_perf_att(series, bnchmark, freq = 'monthly'):
                                      3),
                       'Max Drawdown':  '{:,.2%}'.format(drawdown(series, ret_ = 'nottext')),
                       'Sortino Ratio': round(empyrical.sortino_ratio(series,
-                                                                     required_return= 0.03/12,
+                                                                     required_return= rf,
                                                                      period = freq
                                                                     ),
                                               3),
@@ -733,6 +735,8 @@ def get_monthly_heatmap(returns,
                         filename = None,
                         colors = ['white', 'black'],
                         online = False,
+                        show_scale = False,
+                        height = 600,
                         vmin = 0,
                         vmax = 255):
 
@@ -770,29 +774,31 @@ def get_monthly_heatmap(returns,
                                         colorscale = cscale,
                                         reversescale = True,
                                         hoverinfo = "y+z",
-                                        showscale = True,
+                                        showscale = show_scale,
                                         font_colors= colors)
     for i in range(len(fighm.layout.annotations)):
         fighm.layout.annotations[i].font.size = font_size
 
-    fighm.layout.title = 'Heatmap of Monthly Returns for {0} from {1} - {2}'.format(returns.name,
-                                                                                    y[0],
-                                                                                    y[-1])
+    fighm.layout.title = 'Heatmap for {0} from {1} - {2}'.format(returns.name,
+                                                                y[0],
+                                                                y[-1])
     fighm['layout']['yaxis']['title'] = 'Years'
     fighm['layout']['yaxis']['dtick'] = 3
     fighm['layout']['yaxis']['tick0'] = 2
+    fighm['layout']['width'] = width
+    fighm['layout']['height'] = height
     # fighm.layout.xaxis.title = 'Months'
     if online == False:
         if plt_type == 'iplot':
             return iplot(fighm,
                          show_link= False,
                          image_width = width,
-                         image_height= 1200)
+                         image_height= 900)
         elif plt_type == 'plot':
             return plot(fighm,
                         show_link= False,
                         image_width = width,
-                        image_height= 1200,
+                        image_height= 900,
                     filename = filename)
     elif online == True:
         return py.iplot(fighm, show_link = False, filename = filename)
@@ -873,6 +879,7 @@ def get_monthly_hist(series,
 
 
 def underwater(series,
+               spy_series = None,
                s_name = None,
                width = 900,
                height = 400,
@@ -895,7 +902,11 @@ def underwater(series,
                       layout_update = {'plot_bgcolor': 'white',
                                        'paper_bgcolor': 'white',
     #                                    'hovermode': 'closest',
-                                       'margin': dict(t = 40, pad = -40),
+                                       'margin': dict(t = 70,
+                                                      b = 80,
+                                                      l = 50,
+                                                      r = 0,
+                                                      pad = 0),
                                        'width': width,
                                        'height': height,
                                        'xaxis' : dict(title = 'Dates',
@@ -911,26 +922,59 @@ def underwater(series,
                                                       zeroline = True,
                                                       color = 'black',
                                                       range = range,
-                                                     )
+                                                     ), 
+                                       'legend' : dict(bgcolor = 'white',
+                                                       x = 0.85,
+                                                       y = 0.2, 
+                                                       font = dict(size = 9))
                                       }
                      )
-    
+    eqline = (spy_series + 1).cumprod()
+    ddspy = (eqline/eqline.cummax() - 1) * 100
+    ddspy = ddspy.apply(lambda x: np.round(x, 2))
+    trace_spy = Scatter(dict(fill = 'tonexty', 
+                             fillcolor = 'rgba(73, 192, 235, 0.3)', 
+                             line = dict(color = 'rgba(73, 192, 235, 1)', 
+                                         dash = 'solid', 
+                                         width = 1.3, 
+                                        ), 
+                             mode = 'lines', 
+                             name = spy_series.name, 
+                             x = eqspy.index, 
+                             y = ddspy.values, 
+                             ), 
+                       )
+
+    pyfig.data.append(trace_spy)
     if online == False:
         if plt_type == 'plot':
             plot(pyfig, show_link = False, filename = filename)
         elif plt_type =='iplot':
-            iplot(pyfig, show_link = False)
+            iplot(pyfig, show_link = True)
     elif online == True:
         py.iplot(pyfig, show_link = False)
+
+
+        
 
 
 def get_ann_ret_plot(ret_series,
                      height = None,
                      width = None,
-                     x2range = None):
+                     x2range = None,
+                     orient = 'h',
+                     dtime = 'monthly'):
     cum_series = get_eq_line(ret_series)
-    av_ann_mean = ret_series.resample('A').mean() * 12
-    av_ann_std = ret_series.resample('A').std() * np.sqrt(12)
+    if dtime == 'monthly':
+        
+        av_ann_mean = ret_series.resample('A').mean() * 12
+        av_ann_std = ret_series.resample('A').std() * np.sqrt(12)
+
+    elif dtime == 'daily':
+       av_ann_mean = ret_series.resample('A').mean() * 252
+       av_ann_std = ret_series.resample('A').std() * np.sqrt(252)
+
+        
     annual_ret = get_ann_ret(ret_series)
 
     trace0 = Bar(x = np.round(annual_ret.values * 100,2), 
@@ -1037,7 +1081,7 @@ def get_ann_ret_plot(ret_series,
                            y = ys, 
                            text = str(xs) + '%', 
                            font = dict(family='Arial', 
-                                       size=12,
+                                       size= 9,
                                        color='#006400'),
                             showarrow=False
                           )
@@ -1055,8 +1099,8 @@ def get_ann_ret_plot(ret_series,
     return fig
 #    iplot(fig, show_link= False)
 
-def get_ann_ret(ret_series):
-    cum_series = get_eq_line(ret_series)
+def get_ann_ret(ret_series, dtime = 'monthly'):
+    cum_series = get_eq_line(ret_series, dtime = 'monthly')
     annual = cum_series.resample('A').last()
     annual.loc[ret_series.index[0]] = 1
     annual.sort_index(ascending= True, inplace = True)
@@ -1065,4 +1109,80 @@ def get_ann_ret(ret_series):
     annual_ret.index = annual_ret.index.to_period('A')
     annual_ret.dropna(inplace = True)
     return annual_ret
+
+
+def get_ff_rolling_factors(strat, factors = None, rolling_window = 36):
+    
+    if factors is None:
+        factor_returns = web.DataReader('F-F_Research_Data_5_Factors_2X3', 'famafrench', strat.index[0], strat.index[-1])[0]
+        factor_returns.index = strat.index
+        factor_returns = factor_returns.drop(['RF'], axis =1)
+        factor_returns = factor_returns/100
+    else:
+        factor_returns = factors
+    if (rolling_window >= len(strat)) or (rolling_window >= len(factor_returns)):
+        raise NotImplementedError('The window cannot be greater than length of input of {} rows'.format(len(strat)))
+    
+    coef_ = {}
+    t_stats = {}
+    for beg, end in zip(factor_returns.index[:-rolling_window], 
+                        factor_returns.index[rolling_window:]):
+        model = sm.OLS(strat.loc[beg:end], factor_returns.loc[beg:end], hasconst= True).fit()
+        coef_[end] = model.params
+#         t_stats[end] = model.tvalues
+    return pd.DataFrame(coef_).T
+
+def plot_rolling_ff(strat,
+                    factors = None,
+                    rolling_window = 36,
+                    online = False,
+                    plt_type = 'iplot',
+                    rng = [-4,4],
+                    width = 600,
+                    height = 400):
+    ff_facs = get_ff_rolling_factors(strat, factors, rolling_window)
+    ff_facs = np.round(ff_facs, 3)
+    pyfig = ff_facs.iplot(xTitle= 'Date', 
+                          yTitle = 'Factors', 
+                          width = '1',  
+                          asFigure = True, 
+                          title = 'Rolling FamaFrench factors ({}mo)'.format(rolling_window),
+                          layout_update = dict(plot_bgcolor = 'white', 
+                                               paper_bgcolor = 'white', 
+                                               legend = dict(bgcolor = 'white'), 
+                                               yaxis = dict(range = rng),
+                                               height = height,
+                                               width = width,
+                                               shapes = [
+                                                         {
+                                                             'type' : 'line',
+                                                             'xref' : 'paper',
+                                                             'x0' : 0,
+                                                             'y0' : 0,
+                                                             'x1' : 1,
+                                                             'y1' : 0,
+                                                             'line' : {
+
+                                                                 'color': 'black',
+                                                                 'width': 1,
+                                                                 'dash': 'longdashdot'
+                                                                     },
+                                                             },
+                                                       ]
+                                               ))
+    if not online:
+        if plt_type == 'iplot':
+           iplot(pyfig,
+                 show_link = False,
+                 )
+        elif plt_type == 'plot':
+            plot(pyfig,
+                 show_link = False,
+                 filename = 'RollingFamaFrench.html')
+            
+    elif online:
+        py.iplot(pyfig, width = width, height = height)
+    # pyfig.data
+
+
 
