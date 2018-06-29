@@ -23,6 +23,8 @@ import requests
 import empyrical
 import plotly.figure_factory as ff
 import matplotlib
+import YahooFinance as yf
+import string
 
 def get_adj_close(tickers,start, end, source = 'yahoo'):
     """F: to get adjusted close columns for a list of tickers using Paython's web data dreader
@@ -48,6 +50,66 @@ def get_adj_close(tickers,start, end, source = 'yahoo'):
     return table.sort_index(ascending = True)
 
 
+def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
+    """F: to get daily price data from yahoo.
+    params:
+        tickers: list of strings or string value. Is case sensitive
+        start: datetime isinstance, default is `None`, caclulates start date as Jan 1, 2010
+        end: datetime isinstance, default is `None`, gives today's datetime
+        col: string object or list of strings from 'Adjclose'(default), 'High', 'Low', 'Open', 'Volume'
+    returns:
+        DataFrame of the `col` or multi index DataFrame of columns for `col` parameter
+        """
+    if end is None:
+        end = dt.datetime.today()
+    if start is None:
+        start = dt.datetime(2010,1,1)
+    panel = {}
+    if (isinstance(tickers, list)) and (len(tickers) > 1):
+        high = pd.DataFrame([])
+        low = pd.DataFrame([])
+        open = pd.DataFrame([])
+        close = pd.DataFrame([])
+        volume = pd.DataFrame([])
+        adj_cl = pd.DataFrame([])
+        for i in tickers:
+            try:
+                data = yf.YahooDailyReader(i, start, end).read()
+                high[i] = data['high']
+                low[i] = data['low']
+                open[i] = data['open']
+                close[i] = data['close']
+                volume[i] = data['volume']
+                adj_cl[i] = data['adjclose']
+            except KeyError:
+                print(str(i) + " is not available")
+
+        panel['High'] = high
+        panel['Low'] = low
+        panel['Open'] = open
+        panel['Close'] = close
+        panel['Volume'] = volume
+        panel['Adjclose'] = adj_cl
+        final = pd.concat(panel, axis = 1)
+        if col:
+            return final[col]
+        else:
+            return final
+    elif (isinstance(tickers, list)) and (len(tickers) == 1):
+        tick = tickers[0]
+        final = yf.YahooDailyReader(tick, start, end).read()
+        final.columns = [string.capwords(i) for i in final.columns]
+        if col:
+            return final[col]
+        else:
+            return final
+    elif type(tickers) == str:
+        final = yf.YahooDailyReader(tickers, start, end).read()
+        final.columns = [string.capwords(i) for i in final.columns]
+        if col:
+            return final[col]
+        else:
+            return final
 # def drawdown(df_returns, ret_type = 'log'):
 #     if ret_type == 'log':
 #         cum_returns = np.exp(df_returns.cumsum())
@@ -394,19 +456,19 @@ def get_inst_vol(y,
     ----------
 
     series of conditioanl volatility.
-    
+
     """
 
 
     if (data == 'prices') or (data =='price'):
         y = get_rets(y, kind = 'arth', freq = freq)
-        
+
     if isinstance(y, pd.core.series.Series):
         ## remove nan.
         y = y.dropna()
     else:
         raise TypeError('Data should be time series with index as DateTime')
-        
+
 
     # provide a model
     model = arch.arch_model(y * 100, mean = 'constant', vol = 'Garch')
@@ -473,7 +535,11 @@ def get_lagged_params(y, param = 't', nlags = 24, name = None):
 # def get_lagged_betas(y, nlags = 24)
 
 def autocorr(x, t=1):
-    return np.corrcoef(x.iloc[t:], x.shift(t).dropna())
+    if isinstance(x, np.ndarray):
+        return np.corrcoef(x[t:], x[:-t])
+
+    elif isinstance(x, pd.core.series.Series):
+        return np.corrcoef(x.iloc[t:], x.shift(t).dropna())
 
 
 def get_tseries_autocor(series, nlags = 40):
@@ -514,7 +580,7 @@ def tsmom(series, mnth_vol, mnth_cum, tolerance = 0, vol_flag = False, scale = 0
 
     returns:
     new_longs, new_shorts and leverage"""
-    
+
     ast = series.name
     df = pd.concat([mnth_vol[ast], mnth_cum[ast], mnth_cum[ast].pct_change(lookback)],
                       axis = 1,
@@ -603,7 +669,7 @@ def get_ts(df):
     return df_ts_df
 
 def get_tsmom(mnth_vol, mnth_cum, flag = False, scale = 0.20, lookback = 12):
-    total = mnth_cum.apply(lambda x: tsmom(x, mnth_vol, mnth_cum, scale = scale, vol_flag= flag, lookback= lookback)) 
+    total = mnth_cum.apply(lambda x: tsmom(x, mnth_vol, mnth_cum, scale = scale, vol_flag= flag, lookback= lookback))
     pnl_long = pd.concat([i[0] for i in total], axis = 1)
     pnl_short = pd.concat([i[1] for i in total], axis = 1)
     lev = pd.concat([i[2] for i in total], axis = 1)
@@ -635,7 +701,7 @@ def get_tsmom_port(mnth_vol, mnth_cum, flag = False, scale = 0.2, lookback = 12)
         tsmom.name = 'TSMOM VolScale'
     elif flag == False:
        tsmom.name = 'TSMOM'
-        
+
     return pd.concat([tsmom, leverage], axis = 1)
 
 
@@ -905,7 +971,7 @@ def underwater(series,
                                        'margin': dict(t = 70,
                                                       b = 80,
                                                       l = 50,
-                                                      r = 0,
+                                                      r = 50,
                                                       pad = 0),
                                        'width': width,
                                        'height': height,
@@ -922,27 +988,27 @@ def underwater(series,
                                                       zeroline = True,
                                                       color = 'black',
                                                       range = range,
-                                                     ), 
+                                                     ),
                                        'legend' : dict(bgcolor = 'white',
                                                        x = 0.85,
-                                                       y = 0.2, 
+                                                       y = 0.2,
                                                        font = dict(size = 9))
                                       }
                      )
     eqline = (spy_series + 1).cumprod()
     ddspy = (eqline/eqline.cummax() - 1) * 100
     ddspy = ddspy.apply(lambda x: np.round(x, 2))
-    trace_spy = Scatter(dict(fill = 'tonexty', 
-                             fillcolor = 'rgba(73, 192, 235, 0.3)', 
-                             line = dict(color = 'rgba(73, 192, 235, 1)', 
-                                         dash = 'solid', 
-                                         width = 1.3, 
-                                        ), 
-                             mode = 'lines', 
-                             name = spy_series.name, 
-                             x = eqspy.index, 
-                             y = ddspy.values, 
-                             ), 
+    trace_spy = Scatter(dict(fill = 'tonexty',
+                             fillcolor = 'rgba(73, 192, 235, 0.3)',
+                             line = dict(color = 'rgba(73, 192, 235, 1)',
+                                         dash = 'solid',
+                                         width = 1.3,
+                                        ),
+                             mode = 'lines',
+                             name = spy_series.name,
+                             x = eqspy.index,
+                             y = ddspy.values,
+                             ),
                        )
 
     pyfig.data.append(trace_spy)
@@ -950,12 +1016,12 @@ def underwater(series,
         if plt_type == 'plot':
             plot(pyfig, show_link = False, filename = filename)
         elif plt_type =='iplot':
-            iplot(pyfig, show_link = True)
+            iplot(pyfig, show_link = False)
     elif online == True:
         py.iplot(pyfig, show_link = False)
 
 
-        
+
 
 
 def get_ann_ret_plot(ret_series,
@@ -966,7 +1032,7 @@ def get_ann_ret_plot(ret_series,
                      dtime = 'monthly'):
     cum_series = get_eq_line(ret_series)
     if dtime == 'monthly':
-        
+
         av_ann_mean = ret_series.resample('A').mean() * 12
         av_ann_std = ret_series.resample('A').std() * np.sqrt(12)
 
@@ -974,39 +1040,39 @@ def get_ann_ret_plot(ret_series,
        av_ann_mean = ret_series.resample('A').mean() * 252
        av_ann_std = ret_series.resample('A').std() * np.sqrt(252)
 
-        
+
     annual_ret = get_ann_ret(ret_series)
 
-    trace0 = Bar(x = np.round(annual_ret.values * 100,2), 
-                 y = annual_ret.index.year, 
+    trace0 = Bar(x = np.round(annual_ret.values * 100,2),
+                 y = annual_ret.index.year,
                  name = 'Total Annual Returns',
-                 marker = dict(color = '#00FA9A', 
-                               line = dict(color = '#006400', 
+                 marker = dict(color = '#00FA9A',
+                               line = dict(color = '#006400',
                                            width = 1),
                               ),
                  yaxis = 'y1',
                  orientation = 'h',
                  hoverinfo = 'x'
                 )
-    trace1 = Scatter(x = np.round(av_ann_mean.values * 100,2), 
-                     y = annual_ret.index.year, 
+    trace1 = Scatter(x = np.round(av_ann_mean.values * 100,2),
+                     y = annual_ret.index.year,
                      name = 'Average Annual Returns',
                      mode = 'lines+markers',
-                     line = dict(color = 'black', 
-                                 width = 1, 
+                     line = dict(color = 'black',
+                                 width = 1,
                                  dash = 'dashdot'),
                      hoverinfo = 'x'
 
                     )
 
-    trace2 = Scatter(x = np.round(av_ann_std.values * 100,2), 
-                     y = annual_ret.index.year, 
-                     name = 'Annual Volatility', 
-                     mode = 'lines+markers', 
-                     line = dict(color = '#944bd2', 
+    trace2 = Scatter(x = np.round(av_ann_std.values * 100,2),
+                     y = annual_ret.index.year,
+                     name = 'Annual Volatility',
+                     mode = 'lines+markers',
+                     line = dict(color = '#944bd2',
                                  width = 1,
                                  dash = 'longdashdot'
-                                ), 
+                                ),
                      hoverinfo = 'x'
                     )
 
@@ -1017,7 +1083,7 @@ def get_ann_ret_plot(ret_series,
         hovermode = 'closest',
         yaxis1=dict(
             showgrid=False,
-            zeroline = False, 
+            zeroline = False,
             showticklabels = True,
             showline=False,
             linewidth = 0.75,
@@ -1075,12 +1141,12 @@ def get_ann_ret_plot(ret_series,
             x_loc = xs + 15
         else:
             x_loc = 15
-        annots.append(dict(xref = 'x1', 
-                           yref = 'y1', 
-                           x = x_loc, 
-                           y = ys, 
-                           text = str(xs) + '%', 
-                           font = dict(family='Arial', 
+        annots.append(dict(xref = 'x1',
+                           yref = 'y1',
+                           x = x_loc,
+                           y = ys,
+                           text = str(xs) + '%',
+                           font = dict(family='Arial',
                                        size= 9,
                                        color='#006400'),
                             showarrow=False
@@ -1112,7 +1178,7 @@ def get_ann_ret(ret_series, dtime = 'monthly'):
 
 
 def get_ff_rolling_factors(strat, factors = None, rolling_window = 36):
-    
+
     if factors is None:
         factor_returns = web.DataReader('F-F_Research_Data_5_Factors_2X3', 'famafrench', strat.index[0], strat.index[-1])[0]
         factor_returns.index = strat.index
@@ -1122,10 +1188,10 @@ def get_ff_rolling_factors(strat, factors = None, rolling_window = 36):
         factor_returns = factors
     if (rolling_window >= len(strat)) or (rolling_window >= len(factor_returns)):
         raise NotImplementedError('The window cannot be greater than length of input of {} rows'.format(len(strat)))
-    
+
     coef_ = {}
     t_stats = {}
-    for beg, end in zip(factor_returns.index[:-rolling_window], 
+    for beg, end in zip(factor_returns.index[:-rolling_window],
                         factor_returns.index[rolling_window:]):
         model = sm.OLS(strat.loc[beg:end], factor_returns.loc[beg:end], hasconst= True).fit()
         coef_[end] = model.params
@@ -1142,14 +1208,14 @@ def plot_rolling_ff(strat,
                     height = 400):
     ff_facs = get_ff_rolling_factors(strat, factors, rolling_window)
     ff_facs = np.round(ff_facs, 3)
-    pyfig = ff_facs.iplot(xTitle= 'Date', 
-                          yTitle = 'Factors', 
-                          width = '1',  
-                          asFigure = True, 
+    pyfig = ff_facs.iplot(xTitle= 'Date',
+                          yTitle = 'Factors',
+                          width = '1',
+                          asFigure = True,
                           title = 'Rolling FamaFrench factors ({}mo)'.format(rolling_window),
-                          layout_update = dict(plot_bgcolor = 'white', 
-                                               paper_bgcolor = 'white', 
-                                               legend = dict(bgcolor = 'white'), 
+                          layout_update = dict(plot_bgcolor = 'white',
+                                               paper_bgcolor = 'white',
+                                               legend = dict(bgcolor = 'white'),
                                                yaxis = dict(range = rng),
                                                height = height,
                                                width = width,
@@ -1179,10 +1245,7 @@ def plot_rolling_ff(strat,
             plot(pyfig,
                  show_link = False,
                  filename = 'RollingFamaFrench.html')
-            
+
     elif online:
         py.iplot(pyfig, width = width, height = height)
     # pyfig.data
-
-
-
