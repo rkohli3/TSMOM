@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from pandas_datareader import data as web
+#from pandas_datareader import data as web
 import plotly.plotly as py
 import plotly.tools as tls
 from plotly.graph_objs import *
@@ -56,7 +56,8 @@ def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
         tickers: list of strings or string value. Is case sensitive
         start: datetime isinstance, default is `None`, caclulates start date as Jan 1, 2010
         end: datetime isinstance, default is `None`, gives today's datetime
-        col: string object or list of strings from 'Adjclose'(default), 'High', 'Low', 'Open', 'Volume'
+        col: string object or list of strings from 'Adjclose'(default), 'High', 'Low', 'Open',
+             'Volume', 'Dividend'
     returns:
         DataFrame of the `col` or multi index DataFrame of columns for `col` parameter
         """
@@ -72,6 +73,7 @@ def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
         close = pd.DataFrame([])
         volume = pd.DataFrame([])
         adj_cl = pd.DataFrame([])
+        divs = pd.DataFrame([])
         for i in tickers:
             try:
                 data = yf.YahooDailyReader(i, start, end).read()
@@ -81,6 +83,7 @@ def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
                 close[i] = data['close']
                 volume[i] = data['volume']
                 adj_cl[i] = data['adjclose']
+                divs[i] = data['dividend']
             except KeyError:
                 print(str(i) + " is not available")
 
@@ -90,6 +93,7 @@ def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
         panel['Close'] = close
         panel['Volume'] = volume
         panel['Adjclose'] = adj_cl
+        panel['Dividend'] = divs
         final = pd.concat(panel, axis = 1)
         if col:
             return final[col]
