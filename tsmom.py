@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-#from pandas_datareader import data as web
+from pandas_datareader import data as web
 import plotly.plotly as py
 import plotly.tools as tls
 from plotly.graph_objs import *
@@ -577,10 +577,8 @@ def tsmom(series, mnth_vol, mnth_cum, tolerance = 0, vol_flag = False, scale = 0
     """Function to calculate Time Series Momentum returns on a time series.
     params:
         series: used for name purpose only, provide a series with the name of the ticker
-        mnth_vol: ex-ante volatility which is a monthly timeseries
-        mnth_cum: cumulative monthly returns.
         tolerance: (optional) -1 < x < 1, for signal processing, x < 0 is loss thus short the asst and vice-versa
-        vol_flag: (optional) Boolean default is False. Wherether we are using vol scaling or not
+        vol_flag: (optional) Boolean default is False,
         scale: (optional) volatility scaling parameter
         lookback: (optional) int, lookback months
 
@@ -627,7 +625,6 @@ def tsmom(series, mnth_vol, mnth_cum, tolerance = 0, vol_flag = False, scale = 0
     return new_longs, new_shorts, new_lev
 
 def get_long_short(mnth_cum, lookback = 12):
-    """Function to calculate number of longs and shorts in a particular month"""
     lback_ret = mnth_cum.pct_change(lookback)
     lback_ret = lback_ret.dropna(how = 'all')
     nlongs = lback_ret[lback_ret > 0].count(axis = 1)
@@ -676,20 +673,6 @@ def get_ts(df):
     return df_ts_df
 
 def get_tsmom(mnth_vol, mnth_cum, flag = False, scale = 0.20, lookback = 12):
-    """Calculates the tsmom returns for longside of the portfolio and short side of
-    the portfolio
-
-
-    params:
-        mnth_vol: volatility, monthly timeseries
-        mnth_cum: cumulative monthly returns
-        flag: Volatility flag, whether or not we are using leverage by scaling returns
-        scale: scaling factor
-        lookback: return look, in this case 12 mo returns
-
-    returns:
-        long port returns, short portfolio returns, and leverage
-        """
     total = mnth_cum.apply(lambda x: tsmom(x, mnth_vol, mnth_cum, scale = scale, vol_flag= flag, lookback= lookback))
     pnl_long = pd.concat([i[0] for i in total], axis = 1)
     pnl_short = pd.concat([i[1] for i in total], axis = 1)

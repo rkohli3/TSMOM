@@ -1,14 +1,14 @@
 import pandas as pd
 class YahooDailyReader():
     def __init__(self, symbol=None, start=None, end=None):
-        import datetime, time
+        import datetime as dt, time
         self.symbol = symbol
         
         # initialize start/end dates if not provided
         if end is None:
-            end = datetime.datetime.today()
+            end = dt.datetime.today()
         if start is None:
-            start = datetime.datetime(2010,1,1)
+            start = dt.datetime(2010,1,1)
         
         self.start = start
         self.end = end
@@ -20,19 +20,20 @@ class YahooDailyReader():
         
         url = 'https://finance.yahoo.com/quote/{}/history?'
         url += 'period1={}&period2={}'
-        url += '&filter=history'
-        url += '&interval=1d'
-        url += '&frequency=1d'
+        url += '&filter=div'
         self.url = url.format(self.symbol, unix_start, unix_end)
         
-    def read(self):
+    def base(self):
         import requests, re, json
-       
         r = requests.get(self.url)
         
         ptrn = r'root\.App\.main = (.*?);\n}\(this\)\);'
         txt = re.search(ptrn, r.text, re.DOTALL).group(1)
         jsn = json.loads(txt)
+        return jsn
+    
+    def read(self):
+        jsn = self.base()
         df = pd.DataFrame(
                 jsn['context']['dispatcher']['stores']
                 ['HistoricalPriceStore']['prices']
@@ -47,5 +48,19 @@ class YahooDailyReader():
                  'volume', 'adjclose']]
         df = df.set_index(pd.DatetimeIndex(df['date']))
         df.sort_index(ascending = True, inplace = True)
+        return df
+    
+    def read_div(self):
+        jsn = self.base()
+        df = pd.DataFrame(jsn['context']
+                     ['dispatcher']
+                     ['stores']
+                     ['HistoricalPriceStore']
+                     ['eventsData'])
+        df.insert(0, 'symbol', self.symbol)
+        df['date'] = pd.to_datetime(df.date, unit= 's').dt.date
+        df.set_index('date', inplace = True)
+        df.sort_index(inplace = True)
+        df = df[['amount']]
         return df
     
