@@ -1,3 +1,10 @@
+# Disclaimer
+
+- None of the contents constitute an offer to sell, a solicitation to buy, or a recommendation or endorsement for any security or strategy, nor does it constitute an offer to provide investment advisory services 
+- Past performance is no indicator of future performance
+- Provided for informational purposes only
+- All investments involve risk, including loss of principal
+
 For access to the jupyter notebook with interactivity containing the CTA strategy, please click on this link: http://nbviewer.jupyter.org/github/rkohli3/TSMOM/blob/master/momentum.ipynb
 
 To access the jupyter notebook with interactivity for Indian Equities, please click on the link below:
