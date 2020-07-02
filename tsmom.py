@@ -1,23 +1,24 @@
 import pandas as pd
 import numpy as np
-from pandas_datareader import data as web
-import plotly.plotly as py
+#from pandas_datareader import data as web
+#import chart_studio.plotly as py
 import plotly.tools as tls
 from plotly.graph_objs import *
 from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
 import datetime as dt
-import cufflinks as cf
-cf.go_offline()
+#import cufflinks as cf
+#cf.go_offline()
 from jupyterthemes import jtplot
 #jtplot.style()
-import arch
-import statsmodels.tsa.api as smt
+#import arch
+#import statsmodels.tsa.api as sm
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
-import seaborn as sns
+import statsmodels.formula.api as smf
+#import seaborn as sns
 import pyfolio as pf
-import pytz
-from yahoo import YahooDailyReader
+#import pytz
+#from yahoo import YahooDailyReader
 #sns.set_style('white')
 import requests
 import empyrical
@@ -75,18 +76,18 @@ def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
         adj_cl = pd.DataFrame([])
         divs = pd.DataFrame([])
         for i in tickers:
-            try:
-                data = yf.YahooDailyReader(i, start, end).read()
-                high[i] = data['high']
-                low[i] = data['low']
-                open[i] = data['open']
-                close[i] = data['close']
-                volume[i] = data['volume']
-                adj_cl[i] = data['adjclose']
-                divs[i] = data['dividend']
-            except KeyError:
-                print(str(i) + " is not available")
-
+#             try:
+            data = yf.YahooDailyReader(i, start, end).read()
+            high[i] = data['high']
+            low[i] = data['low']
+            open[i] = data['open']
+            close[i] = data['close']
+            volume[i] = data['volume']
+            adj_cl[i] = data['adjclose']
+            if 'amount' in data.columns:
+                divs[i] = data['amount']
+#             except KeyError:
+#                 print('{} not availble'.format(i))
         panel['High'] = high
         panel['Low'] = low
         panel['Open'] = open
@@ -234,7 +235,7 @@ def get_eq_line(series, data = 'returns', ret_type = 'arth', dtime = 'monthly'):
 
     return cum_rets_prd
 
-def get_exante_vol(series, alpha = 0.05, com = 60, dtime = 'monthly', dtype = 'returns'):
+def get_exante_vol(series, alpha = 0.05, dtime = 'monthly', dtype = 'returns'):
 
     """F: that provides annualized ex ante volatility based on the method of Exponentially Weighted Average\n
     This method is also know as the Risk Metrics, where the instantaneous volatility is based on past volatility\n
@@ -721,26 +722,36 @@ def get_perf_att(series, bnchmark, rf = 0.03/12, freq = 'monthly'):
     returns:
         dataframe of Strategy name and statistics"""
     port_mean, port_std, port_sr = (get_stats(series, dtime = freq))
-    perf = pd.Series({'Annualized_Mean' : '{:,.2f}'.format(round(port_mean, 3)),
-                      'Annualized_Volatility': round(port_std, 3),
+
+    regs = sm.OLS(series, sm.add_constant(bnchmark)).fit()
+    alpha, beta = regs.params
+    t_alpha, t_beta = regs.tvalues
+
+    perf = pd.Series({'Annualized_Mean' : '{:,.5f}'.format(round(port_mean, 5)),
+                      'Annualized_Volatility': round(port_std, 5),
                       'Sharpe Ratio' : round(port_sr, 3),
                       'Calmar Ratio' : round(empyrical.calmar_ratio(series,
                                                                     period = freq),
                                              3),
-                      'Alpha' : round(empyrical.alpha(series,
-                                                      bnchmark,
-                                                      risk_free = rf,
-                                                      period = freq),
-                                      3),
-                      'Beta':  round(empyrical.beta(series,
-                                                    bnchmark),
-                                     3),
+                      # 'Alpha' : round(empyrical.alpha(series,
+                      #                                 bnchmark,
+                      #                                 risk_free = rf,
+                      #                                 period = freq),
+
+                      'Alpha': round(alpha, 3),
+                      # 'Beta':  round(empyrical.beta(series,
+                      #                               bnchmark),
+                      'Beta': round(beta, 3),
+                      'T Value (Alpha)' : round(t_alpha, 3),
+                      'T Value (Beta)': round(t_beta, 3),
                       'Max Drawdown':  '{:,.2%}'.format(drawdown(series, ret_ = 'nottext')),
                       'Sortino Ratio': round(empyrical.sortino_ratio(series,
                                                                      required_return= rf,
                                                                      period = freq
                                                                     ),
                                               3),
+
+
                      },
                     )
     perf.name = series.name
