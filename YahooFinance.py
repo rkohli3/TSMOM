@@ -32,7 +32,7 @@ class YahooDailyReader():
         jsn = json.loads(txt)
         try:
             stk_data = jsn['context']['dispatcher']['stores']['HistoricalPriceStore']
-        except KeyError():
+        except KeyError:
             raise KeyError('No data found for'.format(self.symbol))
         return jsn
 

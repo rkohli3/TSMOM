@@ -26,6 +26,7 @@ import plotly.figure_factory as ff
 import matplotlib
 import YahooFinance as yf
 import string
+import calendar
 
 def get_adj_close(tickers,start, end, source = 'yahoo'):
     """F: to get adjusted close columns for a list of tickers using Paython's web data dreader
@@ -235,7 +236,7 @@ def get_eq_line(series, data = 'returns', ret_type = 'arth', dtime = 'monthly'):
 
     return cum_rets_prd
 
-def get_exante_vol(series, alpha = 0.05, dtime = 'monthly', dtype = 'returns'):
+def get_exante_vol(series, alpha = 0.05, dtime = 'monthly', dtype = 'returns', com = None):
 
     """F: that provides annualized ex ante volatility based on the method of Exponentially Weighted Average\n
     This method is also know as the Risk Metrics, where the instantaneous volatility is based on past volatility\n
@@ -819,7 +820,9 @@ def get_monthly_heatmap(returns,
                         show_scale = False,
                         height = 600,
                         vmin = 0,
-                        vmax = 255):
+                        vmax = 255,
+                        reversescale = False,
+                        render = 'notebook_connected'):
 
     """F: to plot heatmap of monthly returns:
 
@@ -840,9 +843,9 @@ def get_monthly_heatmap(returns,
         yr_from = returns.index[0].year
     grid = empyrical.aggregate_returns(returns, convert_to = 'monthly').unstack().fillna(0).round(4) * 100
     grid = grid.loc[yr_from:yr_to,:]
-    z = grid.as_matrix()
+    z = grid.values
     y = grid.index.values.tolist()
-    x = grid.columns.values.tolist()
+    x = [calendar.month_abbr[i] for i in grid.columns.values.tolist()]
 
     z = grid.values.tolist()
     z.reverse()
@@ -853,7 +856,7 @@ def get_monthly_heatmap(returns,
                                         y= y[::-1],
                                         annotation_text= z_text,
                                         colorscale = cscale,
-                                        reversescale = True,
+                                        reversescale = reversescale,
                                         hoverinfo = "y+z",
                                         showscale = show_scale,
                                         font_colors= colors)
@@ -881,6 +884,9 @@ def get_monthly_heatmap(returns,
                         image_width = width,
                         image_height= 900,
                     filename = filename)
+        elif plt_type == 'show':
+            return fighm.show(render = render,
+                            )
     elif online == True:
         return py.iplot(fighm, show_link = False, filename = filename)
 
@@ -888,7 +894,12 @@ def get_monthly_hist(series,
                      height = 400,
                      width = 900,
                      plt_type = 'iplot',
-                     filename = None):
+                     filename = None,
+                     online = False, 
+                     rng = [-0.1, 0.1],
+                     render = 'notebook_connceted'):
+
+
     """F: to plot histogram of monthly returns
 
     params:
@@ -898,62 +909,66 @@ def get_monthly_hist(series,
 
     returns:
         plotly iplotint"""
+    pd.options.plotting.backend = 'plotly'
     if (len(series) > 200) and (len(series) < 500):
         nbins = int(len(series)/2)
     elif len(series) < 200:
         nbins = int(len(series))
     else:
         nbins = int(len(series)/4)
-    hist = series.iplot(kind = 'histogram',
-                       colors = '#5f4a52',
-                       vline = series.mean(),
-                       bins = nbins,
-                       asFigure= True,
-                       layout_update = {'plot_bgcolor': 'white',
-                                        'paper_bgcolor': 'white',
-                                        'title': 'Monthly Returns Histogram for {}'.format(series.name),
-                                        'margin': dict(t = 40, pad = -40),
-                                        'width': width,
-                                        'height': height,
-                                        'xaxis' : dict(title = 'Returns',
-                                                      showgrid = False,
-                                                      showticklabels = True,
-                                                      zeroline = True,
-                                                       zerolinewidth = 3,
-                                                      color = 'black',
-                                                       range = [-0.06, 0.06],
-                                                      hoverformat = '0.2%'
-                                                     ),
-                                       'yaxis' : dict(title = 'Frequency',
-                                                      showgrid = False,
-                                                      showticklabels = True,
-                                                      zeroline = True,
-                                                      zerolinewidth = 1,
-                                                      color = 'black'
-                                                     ),
-                                        'shapes' : [dict(type = 'line',
+    import plotly.express as px
+    hist = px.histogram(series,
+                        nbins = 40,
+                        title = 'Monthly Returns',
+                        width = 700,
+                        height = 500,
 
-                                                        x0 = series.mean(),
-                                                        x1 = series.mean(),
-                                                        y0 = 0,
-                                                        y1 = 1,
-                                                        yref = 'paper',
-                                                        line = dict(dash = 'dash' + 'dot',
-                                                                    width = 4,
-                                                                    color = 'orange'),
-                                                        )
-                                                   ],
-                                        'showlegend' : True,
-                                        'legend' : dict(x = 0.85,
-                                                        y = 0.9,
-                                                        bgcolor = 'white'),
-                                      })
+                    )
+    hist['layout'] = {'plot_bgcolor': 'white',
+                     'paper_bgcolor': 'white',
+                     'title': 'Monthly Returns Histogram for {}'.format(series.name),
+                     'margin': dict(t = 40, ),#pad = -40
+                     'xaxis' : dict(title = 'Returns',
+                                    showgrid = False,
+                                    showticklabels = True,
+                                    zeroline = True,
+                                    zerolinewidth = 3,
+                                    color = 'black',
+                                    range = rng,
+                                    hoverformat = '0.2%'
+                                                     ),
+                      'yaxis' : dict(title = 'Frequency',
+                                     showgrid = False,
+                                     showticklabels = True,
+                                     zeroline = True,
+                                     zerolinewidth = 1,
+                                     color = 'black'
+                                 ),
+                      'shapes' : [dict(type = 'line',
+
+                                       x0 = series.mean(),
+                                       x1 = series.mean(),
+                                       y0 = 0,
+                                       y1 = 1,
+                                       yref = 'paper',
+                                       line = dict(dash = 'dash' + 'dot',
+                                                   width = 4,
+                                                   color = 'orange'),
+                                       )
+                                   ],
+                      'showlegend' : True,
+                      'legend' : dict(x = 0.85,
+                                      y = 0.9,
+                                      bgcolor = 'white'),
+                  }
     hist.layout.xaxis.tickformat = '0.00%'
     if online == False:
         if plt_type == 'iplot':
             return iplot(hist, show_link= False)
         elif plt_type == 'plot':
             return plot(hist, show_link = False, filename = filename)
+        elif plt_type == 'show':
+            return hist.show(render = render)
     elif online ==True:
         py.iplot(hist, show_link = False)
 
