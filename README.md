@@ -5,7 +5,7 @@
 - Provided for informational purposes only
 - All investments involve risk, including loss of principal
 
-For access to the jupyter notebook with interactivity containing the CTA strategy, please click on this link: http://nbviewer.jupyter.org/github/rkohli3/TSMOM/blob/master/momentum_copy.ipynb
+For access to the jupyter notebook with interactivity containing the CTA strategy, please click on this link: http://nbviewer.jupyter.org/github/rkohli3/TSMOM/blob/master/Momentum.ipynb
 
 To access the jupyter notebook with interactivity for Indian Equities, please click on the link below:
 http://nbviewer.jupyter.org/github/rkohli3/TSMOM/blob/master/MomentumIndia.ipynb
