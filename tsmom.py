@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-#from pandas_datareader import data as web
+from pandas_datareader import data as web
 #import chart_studio.plotly as py
 import plotly.tools as tls
 from plotly.graph_objs import *
@@ -403,8 +403,10 @@ def get_excess_rets(data, freq = 'd', kind = 'arth', shift = 1, data_type = 'ret
         excess returns ie R(t) - RF(t)"""
 
     if data_type == 'returns':
-        rets = data
-    rets = get_rets(data, kind = kind, freq = freq)
+        rets = data.copy()
+    else:
+        rets = get_rets(data, kind = kind, freq = freq)
+
     start_date = rets.index[0]
     if freq == 'm':
         rets.index = rets.index.to_period(freq)
@@ -895,7 +897,7 @@ def get_monthly_hist(series,
                      width = 900,
                      plt_type = 'iplot',
                      filename = None,
-                     online = False, 
+                     online = False,
                      rng = [-0.1, 0.1],
                      render = 'notebook_connceted'):
 
@@ -986,47 +988,26 @@ def underwater(series,
                filename = None):
     if s_name is not None:
         name = s_name
-    name = series.name
-    eqspy = (1+series).cumprod()
-    dd = (eqspy/eqspy.cummax() - 1) * 100
+    else:
+        name = series.name
+    strat_cum = (1+series).cumprod()
+    dd = (strat_cum/strat_cum.cummax() - 1) * 100
     dd = dd.apply(lambda x: np.round(x, 2))
-    pyfig =  dd.iplot(kind = 'area',
-                      fill = 'True',
-                      colors = color,
-                      asFigure = True,
-                      title = 'Underwater plot for {}'.format(name),
-                      layout_update = {'plot_bgcolor': 'white',
-                                       'paper_bgcolor': 'white',
-    #                                    'hovermode': 'closest',
-                                       'margin': dict(t = 70,
-                                                      b = 80,
-                                                      l = 50,
-                                                      r = 50,
-                                                      pad = 0),
-                                       'width': width,
-                                       'height': height,
-                                       'xaxis' : dict(title = 'Dates',
-                                                      showgrid = False,
-                                                      showticklabels = True,
-                                                      zeroline = True,
-                                                      color = 'black',
-                                                      hoverformat = '%A, %b %d %Y '
-                                                     ),
-                                       'yaxis' : dict(title = 'Drawdown in %',
-                                                      showgrid = False,
-                                                      showticklabels = True,
-                                                      zeroline = True,
-                                                      color = 'black',
-                                                      range = range,
-                                                     ),
-                                       'legend' : dict(bgcolor = 'white',
-                                                       x = 0.85,
-                                                       y = 0.2,
-                                                       font = dict(size = 9))
-                                      }
-                     )
-    eqline = (spy_series + 1).cumprod()
-    ddspy = (eqline/eqline.cummax() - 1) * 100
+
+    trace_strat = Scatter(dict(fill = 'tonexty',
+                             fillcolor = 'rgba(200 2, 2, 0.3)',
+                             line = dict(color = 'rgba(217, 2, 2, 1)',
+                                         dash = 'solid',
+                                         width = 1.3,
+                                        ),
+                             mode = 'lines',
+                             name = name,
+                             x = dd.index,
+                             y = dd.values,
+                             ),
+                       )
+    spy_cum = (spy_series + 1).cumprod()
+    ddspy = (spy_cum/spy_cum.cummax() - 1) * 100
     ddspy = ddspy.apply(lambda x: np.round(x, 2))
     trace_spy = Scatter(dict(fill = 'tonexty',
                              fillcolor = 'rgba(73, 192, 235, 0.3)',
@@ -1036,17 +1017,50 @@ def underwater(series,
                                         ),
                              mode = 'lines',
                              name = spy_series.name,
-                             x = eqspy.index,
+                             x = dd.index,
                              y = ddspy.values,
                              ),
                        )
+    layout =  {'plot_bgcolor': 'white',
+               'paper_bgcolor': 'white',
+               'hovermode': 'x unified',
+               'margin': dict(t = 70,
+                              b = 80,
+                              l = 50,
+                              r = 50,
+                              pad = 0),
+               'width': width,
+               'height': height,
+               'xaxis' : dict(title = 'Dates',
+                              showgrid = False,
+                              showticklabels = True,
+                              zeroline = True,
+                              color = 'black',
+                              hoverformat = '%A, %b %d %Y '
+                             ),
+               'yaxis' : dict(title = 'Drawdown in %',
+                              showgrid = False,
+                              showticklabels = True,
+                              zeroline = True,
+                              color = 'black',
+                              range = range,
+                             ),
+               'legend' : dict(bgcolor = 'white',
+                               x = 0.85,
+                               y = 0.2,
+                               font = dict(size = 9))
+              }
 
-    pyfig.data.append(trace_spy)
+
+
+    pyfig = Figure(data = [trace_strat, trace_spy], layout = layout)
     if online == False:
         if plt_type == 'plot':
             plot(pyfig, show_link = False, filename = filename)
         elif plt_type =='iplot':
             iplot(pyfig, show_link = False)
+        elif plt_type == 'show':
+            pyfig.show(render = 'notebook_connceted')
     elif online == True:
         py.iplot(pyfig, show_link = False)
 
