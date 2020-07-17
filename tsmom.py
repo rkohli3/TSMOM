@@ -6,6 +6,7 @@ import plotly.tools as tls
 from plotly.graph_objs import *
 from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
 import datetime as dt
+import plotly.express as px
 #import cufflinks as cf
 #cf.go_offline()
 from jupyterthemes import jtplot
@@ -129,6 +130,16 @@ def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
 #     return ("The maximum drawdown is: {0:,.2}%").format(max_drawdown)
 
 def drawdown(df, data = 'returns', ret_type = 'arth', ret_ = 'text'):
+    """
+    F: to calculate the drawdown of a timeseries price(s) or returns
+    Params:
+        df: DataFrame type containing timeseries returns or prices
+        data: Either 'returns' or 'prices'. Default is 'returns'
+        ret_type: If data is 'returns' then mention the type of rturns. Either 'log' or 'arth'. Default is arth
+        ret_: Output type, default is 'text' tickformat
+    Returns:
+        DataFram
+         """
     if data == 'returns':
         if ret_type == 'arth':
             eq_line = (1 + df).cumprod()
@@ -553,11 +564,13 @@ def autocorr(x, t=1):
 def get_tseries_autocor(series, nlags = 40):
     """F: to calculate autocorrelations of a time series
     params:
+    --------
 
         series: numpy array or series
         nlags: number of lags
 
     returns:
+    --------
         autocorrelation"""
     if isinstance(series, pd.core.frame.DataFrame):
         raise TypeError('Must be 1-d araay')
@@ -629,6 +642,20 @@ def tsmom(series, mnth_vol, mnth_cum, tolerance = 0, vol_flag = False, scale = 0
     return new_longs, new_shorts, new_lev
 
 def get_long_short(mnth_cum, lookback = 12):
+    """
+    F: to return the number of long/short positions taken every balancing month for Time Series Momentum (TSMOM)
+
+    Params
+    -------
+
+        mnth_cum: Cumulative monthly returns in DataFrame(Series) TypeError
+        lookback: Lookback period. Default is 12 (months) periods
+
+    Returns:
+    --------
+        DataFram with long/short positions
+
+    """
     lback_ret = mnth_cum.pct_change(lookback)
     lback_ret = lback_ret.dropna(how = 'all')
     nlongs = lback_ret[lback_ret > 0].count(axis = 1)
@@ -918,7 +945,7 @@ def get_monthly_hist(series,
         nbins = int(len(series))
     else:
         nbins = int(len(series)/4)
-    import plotly.express as px
+
     hist = px.histogram(series,
                         nbins = 40,
                         title = 'Monthly Returns',
@@ -1131,7 +1158,7 @@ def get_ann_ret_plot(ret_series,
             showticklabels = True,
             showline=False,
             linewidth = 0.75,
-            nticks = 30,
+            # nticks = 30,
             domain=[0, 0.85],
 
         ),
@@ -1182,9 +1209,9 @@ def get_ann_ret_plot(ret_series,
     annots = []
     for xs, ys in zip(x_s, annual_ret.index.year):
         if xs > 0:
-            x_loc = xs + 15
+            x_loc = xs + 5
         else:
-            x_loc = 15
+            x_loc = 5
         annots.append(dict(xref = 'x1',
                            yref = 'y1',
                            x = x_loc,
@@ -1223,6 +1250,7 @@ def get_ann_ret(ret_series, dtime = 'monthly'):
 
 def get_ff_rolling_factors(strat, factors = None, rolling_window = 36):
 
+
     if factors is None:
         factor_returns = web.DataReader('F-F_Research_Data_5_Factors_2X3', 'famafrench', strat.index[0], strat.index[-1])[0]
         factor_returns.index = strat.index
@@ -1252,34 +1280,39 @@ def plot_rolling_ff(strat,
                     height = 400):
     ff_facs = get_ff_rolling_factors(strat, factors, rolling_window)
     ff_facs = np.round(ff_facs, 3)
-    pyfig = ff_facs.iplot(xTitle= 'Date',
-                          yTitle = 'Factors',
-                          width = '1',
-                          asFigure = True,
-                          title = 'Rolling FamaFrench factors ({}mo)'.format(rolling_window),
-                          layout_update = dict(plot_bgcolor = 'white',
-                                               paper_bgcolor = 'white',
-                                               legend = dict(bgcolor = 'white'),
-                                               yaxis = dict(range = rng),
-                                               height = height,
-                                               width = width,
-                                               shapes = [
-                                                         {
-                                                             'type' : 'line',
-                                                             'xref' : 'paper',
-                                                             'x0' : 0,
-                                                             'y0' : 0,
-                                                             'x1' : 1,
-                                                             'y1' : 0,
-                                                             'line' : {
+    pyfig = px.line(ff_facs,
+                    title = 'Rolling FamaFrench factors ({}mo)'.format(rolling_window),
 
-                                                                 'color': 'black',
-                                                                 'width': 1,
-                                                                 'dash': 'longdashdot'
-                                                                     },
-                                                             },
-                                                       ]
-                                               ))
+                    )
+
+    layout =  dict(plot_bgcolor = 'white',
+                   paper_bgcolor = 'white',
+                   legend = dict(bgcolor = 'white'),
+                   yaxis = dict(range = rng,
+                                title = 'Factor Value'),
+                   xaxis = dict(title = 'Date'),
+
+                   hovermode = 'x unified',
+                   height = height,
+                   width = width,
+                   shapes = [
+                             {
+                                 'type' : 'line',
+                                 'xref' : 'paper',
+                                 'x0' : 0,
+                                 'y0' : 0,
+                                 'x1' : 1,
+                                 'y1' : 0,
+                                 'line' : {
+
+                                     'color': 'black',
+                                     'width': 1,
+                                     'dash': 'longdashdot'
+                                         },
+                                 },
+                           ]
+                   )
+    pyfig['layout'] = layout
     if not online:
         if plt_type == 'iplot':
            iplot(pyfig,
@@ -1289,6 +1322,8 @@ def plot_rolling_ff(strat,
             plot(pyfig,
                  show_link = False,
                  filename = 'RollingFamaFrench.html')
+        elif plt_type == 'show':
+            pyfig.show(rendder = 'notebook_connceted')
 
     elif online:
         py.iplot(pyfig, width = width, height = height)
