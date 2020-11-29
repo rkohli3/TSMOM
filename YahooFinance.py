@@ -33,14 +33,16 @@ class YahooDailyReader():
         try:
             stk_data = jsn['context']['dispatcher']['stores']['HistoricalPriceStore']
         except KeyError:
-            raise KeyError('No data found for'.format(self.symbol))
+            raise KeyError('No data found for {}'.format(self.symbol))
+            return None
         return jsn
 
     def read(self):
         #retry 3 time
         for x in range(0, 5):
             jsn = self.base()
-            df = pd.DataFrame(
+            if jsn:
+                df = pd.DataFrame(
                     jsn['context']['dispatcher']['stores']
                     ['HistoricalPriceStore']['prices']
                     )
@@ -60,7 +62,7 @@ class YahooDailyReader():
             df = df[['date', 'high', 'low', 'open', 'close',
                          'volume', 'adjclose', 'amount']]
         except KeyError as e:
-            print('One of the columns is not availalble')
+            print('One of the columns for {} is not availalble'.format(self.symbol))
             pass
 
         df = df.set_index(pd.DatetimeIndex(df['date']))

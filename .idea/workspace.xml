@@ -1,7 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="cf555622-53c0-427d-8106-ed8abd897fbf" name="Default Changelist" comment="" />
+    <list default="true" id="cf555622-53c0-427d-8106-ed8abd897fbf" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -60,5 +80,13 @@
       <screen x="0" y="23" width="1440" height="821" />
     </state>
     <state x="251" y="70" key="SettingsEditor/0.23.1440.821@0.23.1440.821" timestamp="1597116794791" />
+    <state x="558" y="307" key="VCS.EditChangelistDialog" timestamp="1597117000545">
+      <screen x="0" y="23" width="1440" height="821" />
+    </state>
+    <state x="558" y="307" key="VCS.EditChangelistDialog/0.23.1440.821@0.23.1440.821" timestamp="1597117000545" />
+    <state x="320" y="171" key="Vcs.Push.Dialog.v2" timestamp="1597117048561">
+      <screen x="0" y="23" width="1440" height="821" />
+    </state>
+    <state x="320" y="171" key="Vcs.Push.Dialog.v2/0.23.1440.821@0.23.1440.821" timestamp="1597117048561" />
   </component>
 </project>

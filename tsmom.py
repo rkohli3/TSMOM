@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from pandas_datareader import data as web
-#import chart_studio.plotly as py
+# from pandas_datareader import data as web
+import chart_studio.plotly as py
 import plotly.tools as tls
 from plotly.graph_objs import *
 from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
@@ -11,8 +11,8 @@ import plotly.express as px
 #cf.go_offline()
 from jupyterthemes import jtplot
 #jtplot.style()
-import arch
-import statsmodels.tsa.api as sm
+#import arch
+#import statsmodels.tsa.api as sm
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
@@ -78,6 +78,7 @@ def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
         adj_cl = pd.DataFrame([])
         divs = pd.DataFrame([])
         for i in tickers:
+            print('Parsing {}'.format(i))
 #             try:
             data = yf.YahooDailyReader(i, start, end).read()
             high[i] = data['high']
@@ -233,7 +234,7 @@ def get_eq_line(series, data = 'returns', ret_type = 'arth', dtime = 'monthly'):
             cum_rets_prd.iloc[0] = 1
 
     elif data == 'prices':
-        cum_rets = series/(series[~series.isnull()][0])
+        cum_rets = series/series[~series.isnull()][0]
 
         if dtime == 'daily':
             cum_rets_prd = cum_rets
@@ -508,7 +509,7 @@ def get_inst_vol(y,
 
     # more interested in conditional vol
     if annualize.lower() == 'd':
-        ann_cond_vol = res.conditional_volatility * np.sqrt(261)
+        ann_cond_vol = res.conditional_volatility * np.sqrt(252)
     elif annualize.lower() == 'm':
         ann_cond_vol = res.conditional_volatility * np.sqrt(12)
     elif annualize.lower() == 'w':
