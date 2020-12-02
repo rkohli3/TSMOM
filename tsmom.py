@@ -106,16 +106,20 @@ def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
     elif (isinstance(tickers, list)) and (len(tickers) == 1):
         tick = tickers[0]
         final = yf.YahooDailyReader(tick, start, end).read()
+        if 'amount' in final.columns:
+            final.replace({'amount': 'dividend'}, inplace = True)
         final.columns = [string.capwords(i) for i in final.columns]
         if col:
-            return final[col]
+            return final[col]#.dropna()
         else:
             return final
     elif type(tickers) == str:
         final = yf.YahooDailyReader(tickers, start, end).read()
+        if 'amount' in final.columns:
+            final.rename(columns = {'amount': 'dividend'}, inplace = True)
         final.columns = [string.capwords(i) for i in final.columns]
         if col:
-            return final[col]
+            return final[col]#.dropna()
         else:
             return final
 # def drawdown(df_returns, ret_type = 'log'):

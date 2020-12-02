@@ -51,21 +51,30 @@ class YahooDailyReader():
                 continue
             else:
                 break
-        df.insert(0, 'symbol', self.symbol)
+        # df.insert(0, 'symbol', self.symbol)
         df['date'] = pd.to_datetime(df['date'], unit='s').dt.date
-        # drop rows that aren't prices
-        df = df.dropna(subset=['close'])
+        df.set_index(pd.DatetimeIndex(df['date']), inplace = True)
+
+        div_key = 0
+
         # print(self.symbol, self.start)
 
         # if 'amount' in df:
         try:
-            df = df[['date', 'high', 'low', 'open', 'close',
-                         'volume', 'adjclose', 'amount']]
+            divs = df['amount'].dropna()
+            div_key = 1
         except KeyError as e:
             print('One of the columns for {} is not availalble'.format(self.symbol))
+            # df = df[['high', 'low', 'open', 'close',
+            #              'volume', 'adjclose',]]
             pass
+        df = df[['high', 'low', 'open', 'close',
+                     'volume', 'adjclose']
+                     ]
+        df = df.dropna(subset = ['close'])
+        if div_key == 1:
+            df = pd.concat([df, divs], axis = 1)
 
-        df = df.set_index(pd.DatetimeIndex(df['date']))
         df.sort_index(ascending = True, inplace = True)
         return df
 
