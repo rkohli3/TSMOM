@@ -315,9 +315,9 @@ def cnvert_daily_to(index, cnvrt_to = 'm'):
     weekly_dt = [f_date]
 
     for yr in t_years.keys():
-        yr_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.DatetimeIndex(t_years[yr]).month)
-        qrter_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.DatetimeIndex(t_years[yr]).quarter)
-        week_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.DatetimeIndex(t_years[yr]).week)
+        yr_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
+    	qrter_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
+    	week_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
         ann_dt.append(max(yr_end[max(yr_end)]))
         for q in qrter_end.keys():
             qrter_dt.append(max(qrter_end[q]))
