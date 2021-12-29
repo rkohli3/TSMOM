@@ -1,4 +1,5 @@
 import pandas as pd
+import requests, re, json
 class YahooDailyReader():
     def __init__(self, symbol=None, start=None, end=None):
         import datetime as dt, time
@@ -24,9 +25,8 @@ class YahooDailyReader():
         self.url = url.format(self.symbol, unix_start, unix_end)
 
     def base(self):
-        import requests, re, json
-        r = requests.get(self.url)
-
+        heads = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15"}
+        r = requests.get(self.url, headers = heads)
         ptrn = r'root\.App\.main = (.*?);\n}\(this\)\);'
         txt = re.search(ptrn, r.text, re.DOTALL).group(1)
         jsn = json.loads(txt)
@@ -91,3 +91,4 @@ class YahooDailyReader():
         df.sort_index(inplace = True)
         df = df[['amount']]
         return df
+
