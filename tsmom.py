@@ -1,33 +1,28 @@
 import pandas as pd
 import numpy as np
-# from pandas_datareader import data as web
+
 import chart_studio.plotly as py
 import plotly.tools as tls
 from plotly.graph_objs import *
 from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
 import datetime as dt
 import plotly.express as px
-#import cufflinks as cf
-#cf.go_offline()
+
 from jupyterthemes import jtplot
-#jtplot.style()
-#import arch
-#import statsmodels.tsa.api as sm
+
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-#import seaborn as sns
+
 import pyfolio as pf
-#import pytz
-#from yahoo import YahooDailyReader
-#sns.set_style('white')
+
 import requests
 import empyrical
 import plotly.figure_factory as ff
 import matplotlib
-import YahooFinance as yf
 import string
 import calendar
+import yfinance
 
 def get_adj_close(tickers,start, end, source = 'yahoo'):
     """F: to get adjusted close columns for a list of tickers using Paython's web data dreader
@@ -53,14 +48,14 @@ def get_adj_close(tickers,start, end, source = 'yahoo'):
     return table.sort_index(ascending = True)
 
 
-def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
+def get_yahoo_data(tickers, start = None, end = None, col = 'Adj Close'):
     """F: to get daily price data from yahoo.
     params:
         tickers: list of strings or string value. Is case sensitive
-        start: datetime isinstance, default is `None`, caclulates start date as Jan 1, 2010
+        start: datetime or list isinstance, default is `None`, caclulates start date as Jan 1, 2010
         end: datetime isinstance, default is `None`, gives today's datetime
-        col: string object or list of strings from 'Adjclose'(default), 'High', 'Low', 'Open',
-             'Volume', 'Dividend'
+        col: string object or list of strings from 'Adj Close'(default), 'High', 'Low', 'Open',
+             'Volume'
     returns:
         DataFrame of the `col` or multi index DataFrame of columns for `col` parameter
         """
@@ -68,71 +63,9 @@ def get_yahoo_data(tickers, start = None, end = None, col = 'Adjclose'):
         end = dt.datetime.today()
     if start is None:
         start = dt.datetime(2010,1,1)
-    panel = {}
-    if (isinstance(tickers, list)) and (len(tickers) > 1):
-        high = pd.DataFrame([])
-        low = pd.DataFrame([])
-        open = pd.DataFrame([])
-        close = pd.DataFrame([])
-        volume = pd.DataFrame([])
-        adj_cl = pd.DataFrame([])
-        divs = pd.DataFrame([])
-        for i in tickers:
-            print('Parsing {}'.format(i))
-#             try:
-            data = yf.YahooDailyReader(i, start, end).read()
-            high[i] = data['high']
-            low[i] = data['low']
-            open[i] = data['open']
-            close[i] = data['close']
-            volume[i] = data['volume']
-            adj_cl[i] = data['adjclose']
-            if 'amount' in data.columns:
-                divs[i] = data['amount']
-#             except KeyError:
-#                 print('{} not availble'.format(i))
-        panel['High'] = high
-        panel['Low'] = low
-        panel['Open'] = open
-        panel['Close'] = close
-        panel['Volume'] = volume
-        panel['Adjclose'] = adj_cl
-        panel['Dividend'] = divs
-        final = pd.concat(panel, axis = 1)
-        if col:
-            return final[col]
-        else:
-            return final
-    elif (isinstance(tickers, list)) and (len(tickers) == 1):
-        tick = tickers[0]
-        final = yf.YahooDailyReader(tick, start, end).read()
-        if 'amount' in final.columns:
-            final.replace({'amount': 'dividend'}, inplace = True)
-        final.columns = [string.capwords(i) for i in final.columns]
-        if col:
-            return final[col]#.dropna()
-        else:
-            return final
-    elif type(tickers) == str:
-        final = yf.YahooDailyReader(tickers, start, end).read()
-        if 'amount' in final.columns:
-            final.rename(columns = {'amount': 'dividend'}, inplace = True)
-        final.columns = [string.capwords(i) for i in final.columns]
-        if col:
-            return final[col]#.dropna()
-        else:
-            return final
-# def drawdown(df_returns, ret_type = 'log'):
-#     if ret_type == 'log':
-#         cum_returns = np.exp(df_returns.cumsum())
 
-#     elif ret_type == 'arth':
-#         cum_returns = (1 + df_returns).cumprod()
-#     draw = 1 - cum_returns.div(cum_returns.cummax())
-#     max_drawdown = np.max(draw)
-# #     print ("The maximum drawdown is:")
-# #     print (max_drawdown.apply(lambda x: "{0:,.2%}".format(x)) )
-#     return ("The maximum drawdown is: {0:,.2}%").format(max_drawdown)
+    data = yfinance.download(tickers, start = start, end = end)
+    return data[col]
 
 def drawdown(df, data = 'returns', ret_type = 'arth', ret_ = 'text'):
     """
@@ -316,8 +249,8 @@ def cnvert_daily_to(index, cnvrt_to = 'm'):
 
     for yr in t_years.keys():
         yr_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
-    	qrter_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
-    	week_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
+        qrter_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
+        week_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
         ann_dt.append(max(yr_end[max(yr_end)]))
         for q in qrter_end.keys():
             qrter_dt.append(max(qrter_end[q]))

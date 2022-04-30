@@ -1,92 +1,199 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="BranchesTreeState">
-    <expand>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-    </expand>
-    <select />
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cf555622-53c0-427d-8106-ed8abd897fbf" name="Default Changelist" comment="">
+    <list default="true" id="15a0a591-d586-4b4f-af12-db240cc8f86c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/TSMOM.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/TSMOM.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.IndiaMidCap-checkpoint.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 10.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 11.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 12.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 127.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 128.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 129.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 13.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 130.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 131.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 132.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 135.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 14.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 140.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 15.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 16.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 17.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 18.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 19.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 2.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 20.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 21.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 22.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 23.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 24.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 25.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 26.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 27.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 28.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 29.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 3.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 30.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 31.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 32.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 33.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 34.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 35.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 36.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 37.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 38.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 39.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 4.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 40.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 41.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 42.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 43.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 44.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 45.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 46.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 47.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 48.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 49.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 5.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 50.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 51.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 6.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 7.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 8.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 83.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 84.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 85.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 86.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 87.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 88.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 89.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 9.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 90.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 91.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 92.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 93.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 94.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 95.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 96.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 97.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint 98.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.MomentumIndia-checkpoint.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.TSMOM_replicateETF-checkpoint 2.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.TSMOM_replicateETF-checkpoint 3.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.TSMOM_replicateETF-checkpoint 4.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.TSMOM_replicateETF-checkpoint 5.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.TSMOM_replicateETF-checkpoint.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.momentum-checkpoint 2.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.momentum-checkpoint 3.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.momentum-checkpoint 4.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.momentum-checkpoint 5.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.momentum-checkpoint 6.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.momentum-checkpoint 7.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.momentum-checkpoint 8.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.momentum-checkpoint.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/.momentum_copy-checkpoint.ipynb.icloud" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsmom.py" beforeDir="false" afterPath="$PROJECT_DIR$/tsmom.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectId" id="1fw6KYkjFVYgzv5J5BVWMTqBW1u" />
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="27wLwSdgsRJkf6mVaoyv0E1sOsy" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager" selected="Python.data">
+    <configuration name="data" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="TSMOM" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/data.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="tsmom" type="PythonConfigurationType" factoryName="Python">
+      <module name="TSMOM" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/venv/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tsmom.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.tsmom" />
+      <item itemvalue="Python.data" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.data" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="cf555622-53c0-427d-8106-ed8abd897fbf" name="Default Changelist" comment="" />
-      <created>1597116744759</created>
+      <changelist id="15a0a591-d586-4b4f-af12-db240cc8f86c" name="Changes" comment="" />
+      <created>1650226439708</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1597116744759</updated>
+      <updated>1650226439708</updated>
     </task>
-    <task id="LOCAL-00001" summary="Updated tsmom.py">
-      <created>1597117044629</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1597117044629</updated>
-    </task>
-    <option name="localTasksCounter" value="2" />
     <servers />
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="Made changes to Conditional Vol" />
-    <MESSAGE value="Updated tsmom.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated tsmom.py" />
-  </component>
-  <component name="WindowStateProjectService">
-    <state x="251" y="70" key="SettingsEditor" timestamp="1597116794791">
-      <screen x="0" y="23" width="1440" height="821" />
-    </state>
-    <state x="251" y="70" key="SettingsEditor/0.23.1440.821@0.23.1440.821" timestamp="1597116794791" />
-    <state x="558" y="307" key="VCS.EditChangelistDialog" timestamp="1597117000545">
-      <screen x="0" y="23" width="1440" height="821" />
-    </state>
-    <state x="558" y="307" key="VCS.EditChangelistDialog/0.23.1440.821@0.23.1440.821" timestamp="1597117000545" />
-    <state x="320" y="171" key="Vcs.Push.Dialog.v2" timestamp="1597117048561">
-      <screen x="0" y="23" width="1440" height="821" />
-    </state>
-    <state x="320" y="171" key="Vcs.Push.Dialog.v2/0.23.1440.821@0.23.1440.821" timestamp="1597117048561" />
   </component>
 </project>
