@@ -24,31 +24,33 @@ import string
 import calendar
 import yfinance
 
-def get_adj_close(tickers,start, end, source = 'yahoo'):
-    """F: to get adjusted close columns for a list of tickers using Paython's web data dreader
-
-    params
-    -------
-
-        tickers: list of tickers
-        start: `str` or `datetime` object
-        end: `str` or `datetime` object
-        source: (optional) str
-                takes input as yahoo, google
-
-    returns:
-    ---------
-    pandas panel of Adj Close price if input is yahoo. Google has some errors with Adjustd Close
-    """
-    panel = web.DataReader(tickers, source.lower(), start, end)
-    if source == 'yahoo':
-        table = panel['Adj Close']
-    elif source == 'google':
-        table = panel['Close']
-    return table.sort_index(ascending = True)
 
 
-def get_yahoo_data(tickers, start = None, end = None, col = 'Adj Close'):
+# def get_adj_close(tickers,start, end, source = 'yahoo'):
+#     """F: to get adjusted close columns for a list of tickers using Paython's web data dreader
+
+#     params
+#     -------
+
+#         tickers: list of tickers
+#         start: `str` or `datetime` object
+#         end: `str` or `datetime` object
+#         source: (optional) str
+#                 takes input as yahoo, google
+
+#     returns:
+#     ---------
+#     pandas panel of Adj Close price if input is yahoo. Google has some errors with Adjustd Close
+#     """
+#     panel = web.DataReader(tickers, source.lower(), start, end)
+#     if source == 'yahoo':
+#         table = panel['Adj Close']
+#     elif source == 'google':
+#         table = panel['Close']
+#     return table.sort_index(ascending = True)
+
+
+def get_yahoo_data(tickers, start = None, end = None, col = 'Adj Close', period = None):
     """F: to get daily price data from yahoo.
     params:
         tickers: list of strings or string value. Is case sensitive
@@ -248,15 +250,15 @@ def cnvert_daily_to(index, cnvrt_to = 'm'):
     weekly_dt = [f_date]
 
     for yr in t_years.keys():
-<<<<<<< HEAD
+
         yr_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
         qrter_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
         week_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
-=======
+
         yr_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().year))
-    	qrter_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().quarter))
-    	week_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
->>>>>>> b4bd6694add2087ddcbffa2d306cbe5955882340
+        qrter_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().quarter))
+        week_end = pd.DatetimeIndex(t_years[yr]).groupby(pd.Int64Index(t_years[yr].isocalendar().week))
+
         ann_dt.append(max(yr_end[max(yr_end)]))
         for q in qrter_end.keys():
             qrter_dt.append(max(qrter_end[q]))
