@@ -1,3 +1,4 @@
+"""Example script demonstrating the usage of the tsmom_kit library."""
 import pandas as pd
 import numpy as np
 import datetime as dt

@@ -1,3 +1,4 @@
+"""Plotting functions for TSMOM results using Plotly."""
 import pandas as pd
 import numpy as np
 import calendar
@@ -15,14 +16,20 @@ import empyrical # for get_monthly_heatmap
 from .analytics import get_ann_ret, get_ff_rolling_factors, drawdown # Added drawdown
 from .main_logic import get_eq_line
 
-def matplotlib_to_plotly(cmap, vmin = 0, vmax = 255):
-    norm = matplotlib.colors.Normalize(vmin = vmin, vmax = vmax)
-    """Converts a matplotlib colormap to plotly colormap or colorscale, which is customized
+def matplotlib_to_plotly(cmap, vmin=0, vmax=255):
+    """Converts a Matplotlib colormap to a Plotly colorscale.
 
-    params:
-        cmap: str, valid cmap in matplotlib"""
+    Args:
+        cmap (str): Name of the Matplotlib colormap (e.g., 'viridis', 'RdYlGn').
+        vmin (int, optional): Minimum value for colormap normalization. Defaults to 0.
+        vmax (int, optional): Maximum value for colormap normalization. Defaults to 255.
 
-    pl_entries = 255
+    Returns:
+        list: A Plotly colorscale, which is a list of [value, color] pairs.
+              Value is normalized between 0 and 1. Color is an RGB string.
+    """
+    norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax)
+    pl_entries = 255  # Number of discrete colors in the Plotly_customized colorscale
     _cmap = matplotlib.cm.get_cmap(cmap)
     h = 1/(pl_entries-1)
     pl_colorscale = []
@@ -34,18 +41,33 @@ def matplotlib_to_plotly(cmap, vmin = 0, vmax = 255):
     return pl_colorscale
 
 def plt_cscale(cmap):
+    """Generates a list of RGB color tuples from a Matplotlib colormap.
+
+    This can be used for creating custom color sequences for plots.
+
+    Args:
+        cmap (str): Name of the Matplotlib colormap (e.g., 'viridis', 'RdYlGn').
+
+    Returns:
+        list: A list of RGB color tuples, where each tuple is (R, G, B)
+              with values scaled between 0 and 1.
+    """
     _cmap = matplotlib.cm.get_cmap(cmap)
-    # The original norm was vmin=-100, vmax=100, but cmap values are 0-255.
-    # Using 0-255 to align with typical colormap indexing.
-    # If the intent was to map a specific range of values to colors,
-    # this function might need adjustment based on how it's used.
-    norm = matplotlib.colors.Normalize(vmin = 0, vmax =255) 
+    # The original norm was vmin=-100, vmax=100 for plt_cscale.
+    # For consistency with matplotlib_to_plotly and general colormap usage,
+    # using a 0-1 normalized range or 0-255 for color mapping is more standard.
+    # The Normalize call here determines how input values [0-254] map to the cmap.
+    # If specific data range mapping is intended, vmin/vmax should reflect that.
+    # For generic colormap conversion, a 0-1 or 0-255 range is common.
+    # Let's assume a standard 0-255 range for color lookup from the cmap.
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=255)
 
-    colorscale =[]
-
-    for i in range(255): # Iterate 0-254, as typical for 255 entries
-        k = matplotlib.colors.colorConverter.to_rgb(_cmap(norm(i)))
-        colorscale.append(k)
+    colorscale = []
+    for i in range(255):  # Generate 255 color steps
+        # _cmap(norm(i)) returns (R, G, B, A) tuple with values 0-1
+        # matplotlib.colors.colorConverter.to_rgb is redundant if _cmap already gives RGB.
+        rgb_color = _cmap(norm(i))[:3]  # Take only R, G, B; values are already 0-1.
+        colorscale.append(rgb_color)
 
     return colorscale
 
@@ -54,7 +76,7 @@ def get_monthly_heatmap(returns,
                         font_size = 10,
                         yr_from = None,
                         yr_to = None,
-                        cnvrt = 'monthly', # This parameter isn't used in the function body
+                        # cnvrt = 'monthly', # This parameter is unused
                         width = 600,
                         plt_type = 'iplot',
                         filename = None,
@@ -65,20 +87,39 @@ def get_monthly_heatmap(returns,
                         vmin = 0, # Used by matplotlib_to_plotly
                         vmax = 255, # Used by matplotlib_to_plotly
                         reversescale = False,
-                        render = 'notebook_connected'):
+                        render='notebook_connected'):
+    """Generates an annotated heatmap of monthly returns.
 
-    """F: to plot heatmap of monthly returns:
+    Args:
+        returns (pandas.Series): Time series of returns. Index should be DatetimeIndex.
+        cmap (str): Matplotlib colormap name for the heatmap.
+        font_size (int, optional): Font size for annotations. Defaults to 10.
+        yr_from (int, optional): Start year for the heatmap. Defaults to the first year in `returns`.
+        yr_to (int, optional): End year for the heatmap. Defaults to the last year in `returns`.
+        width (int, optional): Width of the plot in pixels. Defaults to 600.
+        plt_type (str, optional): Type of plot output: 'iplot' (Jupyter inline), 
+                                  'plot' (standalone HTML file), or 'show' (display figure). 
+                                  Defaults to 'iplot'.
+        filename (str, optional): Filename for saving if `plt_type` is 'plot'. 
+                                  Defaults to "heatmap.html" or "heatmap_online.html".
+        colors (list, optional): List of two strings for font colors of annotations. 
+                                 Defaults to ['white', 'black'].
+        online (bool, optional): If True, attempts to use chart_studio for plotting (not fully implemented here). 
+                                 Defaults to False, using offline plotting.
+        show_scale (bool, optional): Whether to show the colorscale bar. Defaults to False.
+        height (int, optional): Height of the plot in pixels. Defaults to 600.
+        vmin (int, optional): Vmin for colormap normalization. Defaults to 0.
+        vmax (int, optional): Vmax for colormap normalization. Defaults to 255.
+        reversescale (bool, optional): Whether to reverse the colorscale. Defaults to False.
+        render (str, optional): Plotly renderer for `fig.show()`. Defaults to 'notebook_connected'.
 
-    params:
+    Returns:
+        Plotly Figure object or the result of iplot/plot call, depending on `plt_type`.
 
-        returns: pd.Series, daily or monthly returns, ideally a series with datetime index
-        cmap: (optional)str, eg 'RdYlGn'
-        font_size: (optional) font_size of annotations
-        yr_from: (optional) Heatmap year from
-        yr_to: (optional) Heatmap year to
-        cnvrt: (optional) str, convert returns to (currently not used)
-        """
-    cscale = matplotlib_to_plotly(cmap, vmin = vmin, vmax = vmax)
+    Raises:
+        ValueError: If `returns` is not a pandas Series or a single-column DataFrame.
+    """
+    cscale = matplotlib_to_plotly(cmap, vmin=vmin, vmax=vmax)
 
     if yr_to is None:
         yr_to = returns.index[-1].year
@@ -150,17 +191,27 @@ def get_monthly_hist(series,
                      filename = None,
                      online = False, # Not directly used by px.histogram, more for iplot/plot
                      rng = [-0.1, 0.1],
-                     render = 'notebook_connected'): # renderer for .show()
+                     render='notebook_connected'):
+    """Generates an interactive histogram of monthly returns.
 
-    """F: to plot histogram of monthly returns
+    Args:
+        series (pandas.Series): Time series of returns.
+        height (int, optional): Height of the plot in pixels. Defaults to 400.
+        width (int, optional): Width of the plot in pixels. Defaults to 900.
+        plt_type (str, optional): Plot output type: 'iplot', 'plot', 'show'. 
+                                  Defaults to 'iplot'.
+        filename (str, optional): Filename for saving if `plt_type` is 'plot'. 
+                                  Defaults to "histogram.html" or "histogram_online.html".
+        online (bool, optional): If True, uses online plotting mode (not fully set up here). 
+                                 Defaults to False.
+        rng (list, optional): List of two floats for x-axis range [min, max]. 
+                              Defaults to [-0.1, 0.1].
+        render (str, optional): Plotly renderer for `fig.show()`. 
+                                Defaults to 'notebook_connected'.
 
-    params:
-        series: pd.Series, monthly or daily returns
-        height: (optional) int
-        width: (optional)
-
-    returns:
-        plotly Figure object or iplot/plot output"""
+    Returns:
+        Plotly Figure object or the result of iplot/plot call, depending on `plt_type`.
+    """
     # pd.options.plotting.backend = 'plotly' # This is a global option, avoid setting in a library function.
 
     if not isinstance(series, pd.Series):
@@ -246,8 +297,28 @@ def underwater(series,
                plt_type = 'iplot',
                online = False,
                filename = None,
-               render = 'notebook_connected'): # renderer for .show()
-    
+               render='notebook_connected'):
+    """Plots an underwater chart (drawdowns over time) for a strategy and optionally a benchmark.
+
+    Args:
+        series (pandas.Series): Time series of strategy returns.
+        spy_series (pandas.Series, optional): Time series of benchmark returns. Defaults to None.
+        s_name (str, optional): Name of the strategy for the plot title and legend. 
+                                Defaults to `series.name` or "Strategy".
+        width (int, optional): Width of the plot in pixels. Defaults to 900.
+        height (int, optional): Height of the plot in pixels. Defaults to 400.
+        range_y (list, optional): Y-axis range [min, max]. Defaults to None (autorange).
+        plt_type (str, optional): Plot output type: 'iplot', 'plot', 'show'. 
+                                  Defaults to 'iplot'.
+        online (bool, optional): If True, uses online plotting mode. Defaults to False.
+        filename (str, optional): Filename for saving if `plt_type` is 'plot'. 
+                                  Defaults to "underwater_plot.html" or "underwater_plot_online.html".
+        render (str, optional): Plotly renderer for `fig.show()`. 
+                                Defaults to 'notebook_connected'.
+
+    Returns:
+        plotly.graph_objs._figure.Figure: The Plotly figure object.
+    """
     if not isinstance(series, pd.Series): series = pd.Series(series)
     name = s_name if s_name else (series.name if series.name else "Strategy")
     
@@ -333,25 +404,45 @@ def get_ann_ret_plot(ret_series,
                      width = 900,  # Default width
                      x2range = None, # Range for the second x-axis (volatility)
                      # orient = 'h', # This was in original but Bar is explicitly horizontal
-                     dtime = 'monthly'):
-    
+                     freq='monthly'):
+    """Generates a plot showing total annual returns, average annual returns, and annual volatility.
+
+    The plot consists of two subplots:
+    1. A bar chart of total annual returns.
+    2. Line charts for average annual returns and annual volatility.
+
+    Args:
+        ret_series (pandas.Series): Time series of returns. Must have a DatetimeIndex.
+        height (int, optional): Height of the plot in pixels. Defaults to 600.
+        width (int, optional): Width of the plot in pixels. Defaults to 900.
+        x2range (list, optional): Y-axis range for the second subplot (avg return/volatility).
+                                  Defaults to None (autorange).
+        freq (str, optional): Periodicity of input `ret_series` ('monthly' or 'daily').
+                              Used for annualization factors. Defaults to 'monthly'.
+
+    Returns:
+        plotly.graph_objs._figure.Figure: The Plotly figure object.
+
+    Raises:
+        ValueError: If `dtime` is not 'monthly' or 'daily'.
+    """
     if not isinstance(ret_series, pd.Series): ret_series = pd.Series(ret_series)
     
     # get_eq_line is imported from main_logic
     # get_ann_ret is imported from analytics
     
     # Calculate necessary stats
-    annual_ret_values = get_ann_ret(ret_series, dtime=dtime) # This is already pct returns
+    annual_ret_values = get_ann_ret(ret_series, freq=freq) # This is already pct returns
 
     # For average annual mean and std, resample original returns
-    if dtime == 'monthly':
+    if freq == 'monthly':
         ann_factor = 12
         sqrt_ann_factor = np.sqrt(12)
-    elif dtime == 'daily':
+    elif freq == 'daily':
         ann_factor = 252
         sqrt_ann_factor = np.sqrt(252)
     else:
-        raise ValueError("dtime must be 'monthly' or 'daily'")
+        raise ValueError("freq must be 'monthly' or 'daily'")
 
     av_ann_mean = ret_series.resample('A').mean() * ann_factor
     av_ann_std = ret_series.resample('A').std() * sqrt_ann_factor
@@ -466,8 +557,31 @@ def plot_rolling_ff(strat,
                     rng_y = [-2,2], # Renamed from rng to rng_y for y-axis range
                     width = 700, # Adjusted default width
                     height = 500, # Adjusted default height
-                    render = 'notebook_connected'):
-    
+                    render='notebook_connected'):
+    """Plots rolling Fama-French factor betas for a given strategy.
+
+    Utilizes `get_ff_rolling_factors` to calculate the factor betas and then
+    plots them using Plotly Express.
+
+    Args:
+        strat (pandas.Series): Time series of strategy returns.
+        factors (pandas.DataFrame, optional): DataFrame of factor returns. If None,
+                                              Fama-French 5 factors are fetched by
+                                              `get_ff_rolling_factors`. Defaults to None.
+        rolling_window (int, optional): Rolling window length. Defaults to 36.
+        online (bool, optional): Online plotting mode. Defaults to False.
+        plt_type (str, optional): Plot output type: 'iplot', 'plot', 'show'. 
+                                  Defaults to 'iplot'.
+        rng_y (list, optional): Y-axis range for the plot. Defaults to [-2, 2].
+        width (int, optional): Width of the plot. Defaults to 700.
+        height (int, optional): Height of the plot. Defaults to 500.
+        render (str, optional): Plotly renderer for `fig.show()`. 
+                                Defaults to 'notebook_connected'.
+
+    Returns:
+        plotly.graph_objs._figure.Figure or None: The Plotly figure object, or None
+                                                  if factor data is empty.
+    """
     # get_ff_rolling_factors is imported from analytics
     ff_facs = get_ff_rolling_factors(strat, factors=factors, rolling_window=rolling_window)
     

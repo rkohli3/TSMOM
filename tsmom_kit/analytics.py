@@ -1,3 +1,4 @@
+"""Analytics functions for TSMOM, including performance metrics, volatility, and drawdown."""
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
@@ -16,36 +17,46 @@ try:
 except ImportError:
     web = None # Placeholder
 
-def get_exante_vol(series, alpha = 0.05, dtime = 'monthly', dtype = 'returns', com = None):
-    """F: that provides annualized ex ante volatility based on the method of Exponentially Weighted Average\n
-    This method is also know as the Risk Metrics, where the instantaneous volatility is based on past volatility\n
-    with some decay
+def get_exante_vol(series, alpha=0.05, freq='monthly', input_type='returns', com=None):
+    """Calculates annualized ex-ante volatility using Exponentially Weighted Moving Average (EWMA).
 
-    params:
-    -------
+    This method, similar to RiskMetrics, estimates volatility based on past volatility
+    with a decay factor.
 
-        series: pandas series
-        com: center of mass (optional) (int)
-        dtime: str, (optional), 'monthly', 'daily', 'weekly'
+    Args:
+        series (pandas.Series): Time series of prices or returns with a DatetimeIndex.
+        alpha (float, optional): Smoothing factor for EWMA. Defaults to 0.05.
+                                 (Note: `com` is an alternative way to specify decay in pandas EWM)
+        freq (str, optional): Target frequency for annualized volatility ('monthly', 'daily', 'weekly').
+                              The output is resampled to this frequency. Defaults to 'monthly'.
+        input_type (str, optional): Type of input `series` data: 'returns' or 'prices'.
+                                    If 'prices', returns are calculated first. Defaults to 'returns'.
+        com (float, optional): Center of mass for EWM, an alternative to alpha. 
+                               alpha = 1 / (1 + com). Defaults to None.
 
-    returns:
-        ex-ante volatility with time index"""
+    Returns:
+        pandas.Series: Time series of annualized ex-ante volatility.
+
+    Raises:
+        NotImplementedError: If `series` is not a pandas Series with a DatetimeIndex.
+        ValueError: If `dtype` is 'prices' and `get_rets` is not available or fails.
+    """
     if (isinstance(series, pd.core.series.Series)) and (isinstance(series.index, pd.DatetimeIndex)):
         pass
     else:
         raise NotImplementedError('Data Type not supported, should only be timeseries')
-    if dtype == 'prices':
+    if input_type == 'prices':
         # Assuming get_rets is available from .main_logic
         series = get_rets(series, kind = 'arth', freq = 'd')
 
     vol = series.ewm(alpha = alpha, com = com).std()
     ann_vol = vol * np.sqrt(261)
 
-    if dtime == 'daily':
+    if freq == 'daily':
         ann_vol_prd = ann_vol
-    elif dtime == 'monthly':
+    elif freq == 'monthly':
         ann_vol_prd = ann_vol.resample('BM').last().ffill()
-    elif dtime == 'weekly':
+    elif freq == 'weekly':
         ann_vol_prd = ann_vol.resample('W-Fri').last().ffill()
 
     return ann_vol_prd
@@ -56,30 +67,38 @@ def get_inst_vol(y,
                  mean = 'Constant',
                  vol = 'Garch',
                  dist = 'normal',
-                 data = 'prices',
-                 freq = 'd',
-                 ):
-    """Fn: to calculate conditional volatility of an array using Garch:
+                 input_type = 'prices',
+                 freq='d'):
+    """Calculates conditional volatility using a GARCH model.
 
-    params
-    --------------
-    y : {numpy array, series, None}
-        endogenous array of returns
-    x : {numpy array, series, None}
-        exogneous
-    mean : str, optional
-           Name of the mean model.  Currently supported options are: 'Constant',
-           'Zero', 'ARX' and  'HARX'
-    vol : str, optional
-          model, currently supported, 'GARCH' (default),  'EGARCH', 'ARCH' and 'HARCH'
-    dist : str, optional
-           'normal' (default), 't', 'ged'
+    Args:
+        y (pandas.Series or numpy.ndarray): Time series of returns (if `input_type` is 'returns')
+                                           or prices (if `input_type` is 'prices').
+        annualize (str): Frequency for annualizing the conditional volatility 
+                         ('d' for daily, 'm' for monthly, 'w' for weekly).
+        x (pandas.Series or numpy.ndarray, optional): Exogenous variables for the mean 
+                                                      equation (ARX/HARX models). Defaults to None.
+        mean (str, optional): Mean model specification (e.g., 'Constant', 'Zero', 'ARX'). 
+                              Defaults to 'Constant'.
+        vol (str, optional): Volatility model specification (e.g., 'GARCH', 'EGARCH'). 
+                             Defaults to 'GARCH'.
+        dist (str, optional): Distribution for the innovations (e.g., 'normal', 't'). 
+                              Defaults to 'normal'.
+        input_type (str, optional): Type of input `y`: 'prices' or 'returns'. 
+                                    Defaults to 'prices'.
+        freq (str, optional): Frequency of data if `y` is prices, used for return calculation.
+                              Defaults to 'd'.
 
-    returns
-    ----------
-    series of conditioanl volatility.
+    Returns:
+        pandas.Series: Time series of annualized conditional volatility, scaled by 0.01.
+
+    Raises:
+        TypeError: If `y` is not a pandas Series or ndarray when `data` is 'returns',
+                   or if `y` cannot be converted to a Series with DatetimeIndex when 
+                   `input_type` is 'prices'.
+        ValueError: If `annualize` frequency is not recognized.
     """
-    if (data == 'prices') or (data =='price'):
+    if (input_type == 'prices') or (input_type == 'price'):
         # Assuming get_rets is available from .main_logic
         y = get_rets(y, kind = 'arth', freq = freq)
 
@@ -95,18 +114,6 @@ def get_inst_vol(y,
     # fit the model
     res = model.fit(update_freq= 5)
 
-    # get the parameters. Here [1] means number of lags. This is only Garch(1,1)
-    # These lines seem illustrative rather than functional for the direct output
-    # omega = res.params['omega']
-    # alpha = res.params['alpha[1]']
-    # beta = res.params['beta[1]']
-
-    # inst_vol = res.conditional_volatility * np.sqrt(252) # This was not used for ann_cond_vol
-    # if isinstance(inst_vol, pd.core.series.Series):
-    #     inst_vol.name = y.name
-    # elif isinstance(inst_vol, np.ndarray):
-    #     inst_vol = inst_vol
-
     # more interested in conditional vol
     if annualize.lower() == 'd':
         ann_cond_vol = res.conditional_volatility * np.sqrt(252)
@@ -120,48 +127,74 @@ def get_inst_vol(y,
 
     return ann_cond_vol * 0.01
 
-def drawdown(df, data = 'returns', ret_type = 'arth', ret_ = 'text'):
-    """
-    F: to calculate the drawdown of a timeseries price(s) or returns
-    Params:
-        df: DataFrame type containing timeseries returns or prices
-        data: Either 'returns' or 'prices'. Default is 'returns'
-        ret_type: If data is 'returns' then mention the type of rturns. Either 'log' or 'arth'. Default is arth
-        ret_: Output type, default is 'text' tickformat
+def drawdown(df, input_type='returns', ret_type='arth', output_format='text'):
+    """Calculates the drawdown of a time series of prices or returns.
+
+    Drawdown is the percentage decline from a peak.
+
+    Args:
+        df (pandas.Series or pandas.DataFrame): Time series of prices or returns.
+        input_type (str, optional): Type of input `df`: 'returns' or 'prices'. 
+                                    Defaults to 'returns'.
+        ret_type (str, optional): If `input_type` is 'returns', specifies the return type: 
+                                  'log' or 'arth'. Defaults to 'arth'.
+        output_format (str, optional): Output type: 'text' for a formatted string of the max drawdown,
+                                       or any other value for the raw max drawdown value(s) (float or Series).
+                                       Defaults to 'text'.
+
     Returns:
-        DataFrame or float/str
-         """
-    if data == 'returns':
+        float or pandas.Series or str: 
+            - If `output_format` is 'text' and `df` is a Series: Formatted string of max drawdown.
+            - If `output_format` is 'text' and `df` is a DataFrame: Dictionary of formatted strings per column.
+            - If `output_format` is not 'text': Max drawdown (float for Series, pandas.Series for DataFrame).
+
+    Raises:
+        ValueError: If `input_type` parameter is not 'returns' or 'prices'.
+    """
+    if input_type == 'returns':
         if ret_type == 'arth':
             eq_line = (1 + df).cumprod()
         elif ret_type == 'log':
             eq_line = np.exp(df.cumsum())
-    elif data == 'prices': # Corrected from 'if' to 'elif' for clarity
+    elif input_type == 'prices': # Corrected from 'if' to 'elif' for clarity
         eq_line = df
     else:
-        raise ValueError("data parameter must be 'returns' or 'prices'")
+        raise ValueError("input_type parameter must be 'returns' or 'prices'")
 
     draw = 1 - eq_line.div(eq_line.cummax())
     max_drawdown = np.max(draw) # For DataFrames, this will be a Series of max drawdowns per column
 
     if isinstance(df, pd.DataFrame) and isinstance(max_drawdown, pd.Series):
-         if ret_ != 'text':
+         if output_format != 'text':
             return max_drawdown # Return Series of max drawdowns
          else:
             # For text output with multiple columns, perhaps return a dict or formatted string
             return {col: "The maximum drawdown is: {0:,.2%}".format(val) for col, val in max_drawdown.items()}
 
-    if ret_ != 'text':
+    if output_format != 'text':
         return max_drawdown # single float
-    elif ret_ =='text':
+    elif output_format =='text':
         return ("The maximum drawdown is: {0:,.2%}").format(max_drawdown) # single string
 
-def rolling_drawdown(df, data = 'returns', ret_type = 'arth'):
-    """F: that calculates periodic drawdown.:
-    params:
-        df: takes in dataframe or pandas series
-        data: (optional) str, prices or returns,
-        ret_type: (optional) return type, log or arth"""
+def rolling_drawdown(df, input_type='returns', ret_type='arth'): # Renamed 'data' to 'input_type' here as well for consistency
+    """Calculates the rolling drawdown of a time series.
+
+    The rolling drawdown is the percentage decline from the cumulative peak 
+    at each point in time.
+
+    Args:
+        df (pandas.Series or pandas.DataFrame): Time series of prices or returns.
+        data (str, optional): Type of input `df`: 'returns' or 'prices'. 
+                              Defaults to 'returns'.
+        ret_type (str, optional): If `data` is 'returns', specifies the return type: 
+                                  'log' or 'arth'. Defaults to 'arth'.
+
+    Returns:
+        pandas.Series or pandas.DataFrame: Time series of rolling drawdowns.
+
+    Raises:
+        ValueError: If `data` parameter is not 'returns' or 'prices'.
+    """
     if data == 'returns':
         if ret_type == 'arth':
             eq_line = (1 + df).cumprod()
@@ -174,13 +207,24 @@ def rolling_drawdown(df, data = 'returns', ret_type = 'arth'):
     draw = eq_line.div(eq_line.cummax()) - 1
     return draw
 
-def get_stats(returns, dtime = 'monthly'):
-    """Function to calulcte annualized mean, annualized volatility and annualized sharpe ratio
-    params:
-        returns: series or dataframe of retunrs
-        dtime: (optional) 'monthly' or 'daily'
-    returns:
-        tuple of stats(mean, std and sharpe)"""
+def get_stats(returns, freq='monthly'):
+    """Calculates annualized mean return, annualized volatility, and Sharpe ratio.
+
+    Args:
+        returns (pandas.Series or pandas.DataFrame or numpy.ndarray): Time series of returns.
+        freq (str, optional): Periodicity of input returns ('monthly' or 'daily') 
+                              for annualization. Defaults to 'monthly'.
+
+    Returns:
+        tuple: Contains:
+            - float or pandas.Series: Annualized mean return(s).
+            - float or pandas.Series: Annualized volatility(ies).
+            - float or pandas.Series: Sharpe ratio(s).
+
+    Raises:
+        TypeError: If `returns` cannot be converted to a numpy array.
+        ValueError: If `dtime` is not 'monthly' or 'daily'.
+    """
     if not (isinstance(returns, pd.Series) or isinstance(returns, pd.DataFrame)):
         try:
             # Attempt to convert to numpy array if not Series/DataFrame
@@ -191,14 +235,14 @@ def get_stats(returns, dtime = 'monthly'):
     mean = np.mean(returns, axis=0) # np.mean works for both Series/DF and arrays
     std = np.std(returns, axis=0)   # np.std works for both Series/DF and arrays
 
-    if dtime == 'monthly':
+    if freq == 'monthly':
         mean = mean * 12
         std = std * np.sqrt(12)
-    elif dtime == 'daily':
+    elif freq == 'daily':
         mean = mean * 252
         std = std * np.sqrt(252)
     else:
-        raise ValueError("dtime must be 'monthly' or 'daily'")
+        raise ValueError("freq must be 'monthly' or 'daily'")
 
     # Handle division by zero for Sharpe ratio
     # If std is a Series/array, handle element-wise
@@ -208,12 +252,21 @@ def get_stats(returns, dtime = 'monthly'):
         sr = mean / std if std != 0 else np.nan
     return (mean, std, sr)
 
-def get_ytd(table, year = None): # year default to None to use current year
-    """Function to calculate year to date performance:
-    params:
-    --------
-    table: pd.series or dataframe with DatetimeIndex
-    year: (optional) int, defaults to current year if None
+def get_ytd(table, year=None):
+    """Calculates Year-To-Date (YTD) performance for a given price series.
+
+    Args:
+        table (pandas.Series or pandas.DataFrame): Time series of prices. 
+                                                 Must have a DatetimeIndex.
+        year (int, optional): The year for which to calculate YTD performance. 
+                              Defaults to the current year.
+
+    Returns:
+        float or pandas.Series: YTD performance. Returns np.nan or a Series of np.nan
+                                if data for the year is insufficient or not found.
+
+    Raises:
+        ValueError: If `table` does not have a DatetimeIndex, or if `year` is in the future.
     """
     if not isinstance(table.index, pd.DatetimeIndex):
         raise ValueError("Table must have a DatetimeIndex.")
@@ -253,17 +306,26 @@ def get_ytd(table, year = None): # year default to None to use current year
     return ytd_perf
 
 
-def get_perf_att(series, bnchmark, rf = 0.03/12, freq = 'monthly'):
-    """F: that provides performance statistic of the returns
-    params
-    -------
-        series: daily or monthly returns (pd.Series)
-        bnchmark: benchmark returns (pd.Series)
-        rf: risk-free rate (float, period-aligned with series and bnchmark)
-        freq: 'monthly' or 'daily'
-    returns:
-        dataframe of Strategy name and statistics"""
-    port_mean, port_std, port_sr = get_stats(series, dtime = freq)
+def get_perf_att(series, bnchmark, rf=0.03/12, freq='monthly'):
+    """Calculates and tabulates various performance attribution statistics.
+
+    Includes annualized mean, volatility, Sharpe ratio, Calmar ratio, alpha, beta,
+    t-statistics for alpha/beta, max drawdown, and Sortino ratio.
+
+    Args:
+        series (pandas.Series): Time series of strategy returns.
+        bnchmark (pandas.Series): Time series of benchmark returns.
+        rf (float, optional): Risk-free rate for the period of returns. 
+                              Defaults to 0.03/12 (0.25% monthly).
+        freq (str, optional): Frequency of returns ('monthly' or 'daily') for
+                              annualization and ratio calculations. Defaults to 'monthly'.
+
+    Returns:
+        pandas.DataFrame: A single-column DataFrame where the index contains statistic names
+                          and the column is the strategy's performance for those statistics.
+                          Values are typically formatted as strings.
+    """
+    port_mean, port_std, port_sr = get_stats(series, dtime=freq)
 
     # Align series and benchmark indices before regression
     aligned_series, aligned_bnchmark = series.align(bnchmark, join='inner')
@@ -301,26 +363,38 @@ def get_perf_att(series, bnchmark, rf = 0.03/12, freq = 'monthly'):
     }
     
     # Apply formatting for display if needed, or return raw numbers
-    formatted_perf = {k: '{:,.3f}'.format(v) if isinstance(v, (float, np.float_)) and k not in ['Max Drawdown'] else 
-                         '{:,.2%}'.format(v) if k == 'Max Drawdown' and isinstance(v, (float, np.float_)) else
-                         v 
-                      for k, v in perf_dict.items()}
+    # formatted_perf = {k: '{:,.3f}'.format(v) if isinstance(v, (float, np.float_)) and k not in ['Max Drawdown'] else 
+    #                      '{:,.2%}'.format(v) if k == 'Max Drawdown' and isinstance(v, (float, np.float_)) else
+    #                      v 
+    #                   for k, v in perf_dict.items()}
 
-    perf_series = pd.Series(formatted_perf)
+    # perf_series = pd.Series(formatted_perf)
+
+    # Return raw numerical data
+    perf_series = pd.Series(perf_dict)
     perf_series.name = series.name if series.name else "Strategy"
     return perf_series.to_frame()
 
-def get_lagged_params(y, param = 't', nlags = 24, name = None):
-    """Function to calculate lagged parameters of a linear regression:
-    params:
-    --------
-        y: series or numpy array
-        param: (optional) `str` parameter to show, either 't' (t-statistic) or 'b' (beta coefficient)
-        nlags: (optional) `int`
-        name: None (optional) name of the series
-    returns:
-    ----------
-        `pd.Series` of lagged params with index as number of lags"""
+def get_lagged_params(y, param='t', nlags=24, name=None):
+    """Calculates lagged parameters (t-stats or coeffs) of an autoregression.
+
+    Performs an OLS regression of the series `y` against its own lagged values,
+    up to `nlags`.
+
+    Args:
+        y (pandas.Series or numpy.ndarray): Time series data.
+        param (str, optional): Parameter to return: 't' for t-statistic of the lagged variable,
+                               'b' for its beta coefficient. Defaults to 't'.
+        nlags (int, optional): Number of lags to calculate parameters for. Defaults to 24.
+        name (str, optional): Name for the returned Series. Defaults to `y.name` or None.
+
+    Returns:
+        pandas.Series: Series of calculated parameters (t-stats or betas) indexed by lag number.
+                       Returns an empty Series with a warning if data is insufficient.
+    
+    Raises:
+        ValueError: If `param` is not 't' or 'b'.
+    """
     if not isinstance(y, pd.Series):
         y = pd.Series(y)
 
@@ -360,6 +434,16 @@ def get_lagged_params(y, param = 't', nlags = 24, name = None):
     return t_vals
 
 def autocorr(x, t=1):
+    """Calculates the autocorrelation of a series for a specific lag.
+
+    Args:
+        x (pandas.Series or numpy.ndarray): Input time series.
+        t (int, optional): Lag for which to calculate autocorrelation. Defaults to 1.
+
+    Returns:
+        float: Autocorrelation value for the specified lag. Returns np.nan if
+               insufficient data points after handling NaNs.
+    """
     if isinstance(x, np.ndarray):
         # Ensure x is 1D
         if x.ndim > 1:
@@ -370,27 +454,26 @@ def autocorr(x, t=1):
         return np.corrcoef(x_valid[t:], x_valid[:-t])[0, 1]
     elif isinstance(x, pd.Series):
         x_valid = x.dropna()
-        if len(x_valid) <= t: return np.nan
-        # Use pandas' built-in autocorr for Series, it handles NaNs by default (though we already dropped)
-        # return x_valid.autocorr(lag=t) # pandas .autocorr() is simpler and robust
-        # Or, stick to np.corrcoef for consistency with ndarray version:
-        return np.corrcoef(x_valid.iloc[t:], x_valid.shift(t).dropna().iloc[t-t:])[0,1] # Careful with indexing if using shift
-        # A more direct way with Series for np.corrcoef:
-        shifted_x = x_valid.shift(t).dropna()
-        original_x_aligned = x_valid.loc[shifted_x.index]
-        if len(original_x_aligned) < 2 : return np.nan # Need at least 2 points for corrcoef
-        return np.corrcoef(original_x_aligned, shifted_x)[0, 1]
+        if len(x_valid) <= t: # Check if enough non-NaN values for the given lag
+            return np.nan
+        return x_valid.autocorr(lag=t)
 
 
-def get_tseries_autocor(series, nlags = 40):
-    """F: to calculate autocorrelations of a time series
-    params:
-    --------
-        series: numpy array or series
-        nlags: number of lags
-    returns:
-    --------
-        pd.Series of autocorrelations"""
+def get_tseries_autocor(series, nlags=40):
+    """Calculates autocorrelations for a time series up to a specified number of lags.
+
+    Args:
+        series (pandas.Series or numpy.ndarray): Input time series.
+        nlags (int, optional): Number of lags to calculate autocorrelations for. 
+                               Defaults to 40.
+
+    Returns:
+        pandas.Series: Series of autocorrelation values, indexed by lag number.
+                       Returns NaNs for lags greater than or equal to series length.
+
+    Raises:
+        TypeError: If `series` is a pandas DataFrame (requires 1-D input).
+    """
     if isinstance(series, pd.DataFrame):
         raise TypeError('Input must be a 1-D array or Series, not a DataFrame.')
     
@@ -415,7 +498,30 @@ def get_tseries_autocor(series, nlags = 40):
     auto_series = pd.Series(auto_cor, name=name if name else "Autocorrelation")
     return auto_series
 
-def get_ff_rolling_factors(strat, factors = None, rolling_window = 36):
+def get_ff_rolling_factors(strat, factors=None, rolling_window=36):
+    """Calculates rolling Fama-French factor exposures (betas) for a strategy.
+
+    Fetches Fama-French 5-factor data if not provided and calculates rolling
+    OLS regression coefficients for the strategy returns against these factors.
+
+    Args:
+        strat (pandas.Series): Time series of strategy returns. Must have a DatetimeIndex.
+        factors (pandas.DataFrame, optional): DataFrame of factor returns. If None,
+                                              Fama-French 5 factors are fetched.
+                                              Defaults to None.
+        rolling_window (int, optional): Rolling window length in periods (typically months).
+                                        Defaults to 36.
+
+    Returns:
+        pandas.DataFrame: DataFrame of rolling factor betas (coefficients), indexed by date.
+                          Returns an empty DataFrame if data is insufficient.
+
+    Raises:
+        ImportError: If `factors` is None and pandas_datareader is not available.
+        ConnectionError: If fetching Fama-French data fails.
+        ValueError: If `strat` does not have a DatetimeIndex when factors need fetching,
+                    or if `rolling_window` is invalid or too large for the data.
+    """
     if web is None and factors is None:
         raise ImportError("pandas_datareader is not available and no factors provided. Cannot fetch Fama-French data.")
 
@@ -480,78 +586,80 @@ def get_ff_rolling_factors(strat, factors = None, rolling_window = 36):
     return pd.DataFrame.from_dict(coef_, orient='index') # Each dict item becomes a row
 
 
-def cnvert_daily_to(index, cnvrt_to = 'm'):
-    """F: to convert a daily time series to monthly, weekly, quarterly, annually. Note this is not same as
-    resample, as resample, take last, first, or middle values, even if they are not in the series.
-    This function takes the dates witnessed empirically from the actual data.
+def cnvert_daily_to(index, target_freq='m'):
+    """Converts a daily DatetimeIndex to other frequencies using actual last observed dates.
 
-    params:
-    --------
-        index: pd.DatetimeIndex (daily)
-        cnvrt_to: 'str' (optional), 'm' (monthly), 'q' (quarterly), 'a' (annually), 'w' (weekly), 'd' (daily)
-    returns:
-    ---------
-        pd.DatetimeIndex with the freq as mentioned, containing actual end-of-period dates found in the data."""
+    This function is distinct from resample, as it finds the last date present 
+    in the input data for each specified period (month, quarter, etc.).
 
+    Args:
+        index (pd.DatetimeIndex): Daily DatetimeIndex.
+        target_freq (str, optional): Target frequency:
+                                     'd' (daily), 
+                                     'w' (weekly - ISO), 
+                                     'm' (monthly), 
+                                     'q' (quarterly), 
+                                     'a' (annually). 
+                                     Defaults to 'm'.
+
+    Returns:
+        pd.DatetimeIndex: DatetimeIndex with actual end-of-period dates found in the data.
+
+    Raises:
+        TypeError: If input is not a pandas DatetimeIndex.
+        ValueError: If `target_freq` is not a supported frequency string.
+    """
     if not isinstance(index, pd.DatetimeIndex):
         raise TypeError("Input must be a pandas DatetimeIndex.")
     
     if index.empty:
         return pd.DatetimeIndex([])
 
-    cnvrt_to = cnvrt_to.lower()
-    # Sort the index to ensure correct period selection
-    t_day_index = pd.DatetimeIndex(sorted(list(set(index)))) # Unique sorted dates
-
-    if t_day_index.empty: # Should not happen if original index was not empty, but good check
-        return pd.DatetimeIndex([])
-        
-    # Group by year, then by the desired period within each year
-    grouped_by_year = t_day_index.to_series().groupby(t_day_index.year)
+    # Ensure unique sorted dates for processing
+    unique_sorted_index = pd.DatetimeIndex(sorted(list(set(index))))
     
-    period_end_dates = []
+    if unique_sorted_index.empty: # Should not happen if original index wasn't empty
+        return pd.DatetimeIndex([])
 
-    for year, days_in_year in grouped_by_year:
-        if cnvrt_to == 'd': # Daily - just return the unique sorted index
-            period_end_dates.extend(days_in_year.index)
-            continue
+    s = unique_sorted_index.to_series() # Work with a Series for groupby convenience
+    target_freq = target_freq.lower()
 
-        days_in_year_series = days_in_year.index.to_series() # Series of DatetimeIndex
+    if target_freq == 'd':
+        period_end_dates = unique_sorted_index
+    elif target_freq in ['monthly', 'm']:
+        period_end_dates = s.groupby([s.index.year, s.index.month]).max().values
+    elif target_freq in ['quarterly', 'q']:
+        period_end_dates = s.groupby([s.index.year, s.index.quarter]).max().values
+    elif target_freq in ['annually', 'a']:
+        period_end_dates = s.groupby(s.index.year).max().values
+    elif target_freq in ['weekly', 'w']:
+        # Use ISO calendar year and week for grouping
+        isocal = s.index.isocalendar()
+        period_end_dates = s.groupby([isocal.year, isocal.week]).max().values
+    else:
+        raise ValueError(f"target_freq value '{target_freq}' not supported. Use 'd', 'w', 'm', 'q', or 'a'.")
+    
+    # The .values from groupby().max() will be an array of Timestamps.
+    # Convert to DatetimeIndex and sort, as groupby doesn't guarantee sorted output of values.
+    return pd.DatetimeIndex(np.sort(period_end_dates))
 
-        if cnvrt_to in ['monthly', 'm']:
-            # Group by month, take the last day of each month present in the data
-            monthly_groups = days_in_year_series.groupby(days_in_year_series.index.month)
-            for _, month_days in monthly_groups:
-                period_end_dates.append(month_days.max())
-        elif cnvrt_to in ['quarterly', 'q']:
-            quarterly_groups = days_in_year_series.groupby(days_in_year_series.index.quarter)
-            for _, quarter_days in quarterly_groups:
-                period_end_dates.append(quarter_days.max())
-        elif cnvrt_to in ['annually', 'a']:
-            # The last day of the year present in the data
-            period_end_dates.append(days_in_year_series.max())
-        elif cnvrt_to in ['weekly', 'w']:
-            # For weekly, group by ISO week. Pandas isocalendar().week
-            # Need to handle year changes correctly for ISO weeks if week spans year boundary.
-            # Simpler: group by year and then week number.
-            weekly_groups = days_in_year_series.groupby(days_in_year_series.index.isocalendar().week)
-            for _, week_days in weekly_groups:
-                period_end_dates.append(week_days.max())
-        else:
-            raise ValueError(f"cnvrt_to value '{cnvrt_to}' not supported. Use 'd', 'w', 'm', 'q', or 'a'.")
+def get_ann_ret(ret_series, freq='monthly'):
+    """Calculates annualized returns from a series of returns.
 
-    if cnvrt_to == 'd': # If daily, all unique sorted dates are already collected by year.
-        # This path will be taken if original loop was for 'd', just consolidate.
-        # However, the logic is structured to build period_end_dates for other freqs.
-        # If 'd', we can simply return the unique sorted index directly.
-        return t_day_index
+    The function first calculates an equity line using `get_eq_line`, then
+    resamples it annually, and finally computes the percentage change
+    to get annualized returns.
 
-    # Remove duplicates that might arise if, e.g., multiple years have same month-end (not typical for this logic)
-    # And sort them, as grouping by year and then period might not preserve overall chronological order perfectly.
-    return pd.DatetimeIndex(sorted(list(set(period_end_dates))))
+    Args:
+        ret_series (pandas.Series): Time series of returns. Must have a DatetimeIndex.
+        freq (str, optional): The periodicity of the input `ret_series` 
+                              (e.g., 'monthly', 'daily', 'weekly'). This is passed to
+                              `get_eq_line`. Defaults to 'monthly'.
 
-def get_ann_ret(ret_series, dtime = 'monthly'):
-    cum_series = get_eq_line(ret_series, dtime = dtime) # Corrected: dtime was 'monthly' fixed
+    Returns:
+        pandas.Series: Time series of annualized returns, indexed by year (PeriodIndex).
+    """
+    cum_series = get_eq_line(ret_series, freq=freq) # Use freq here
     annual = cum_series.resample('A').last()
     # Ensure the first data point is included for pct_change calculation if it's the start of a year
     # or if the series doesn't start at the beginning of a year.
@@ -596,25 +704,21 @@ def get_ann_ret(ret_series, dtime = 'monthly'):
     return annual_ret
 
 def get_ts(df):
-    """
-    Calculates time-series related statistics, typically lagged parameters, for each column in a DataFrame.
-    It iterates over each column (assumed to be a time series of a particular asset or factor)
-    and applies `get_lagged_params` to it.
+    """Calculates time-series lagged parameters for each column in a DataFrame.
 
-    Parameters:
-    -----------
-    df : pd.DataFrame
-        A DataFrame where each column represents a time series for which lagged parameters
-        (e.g., t-statistics or beta coefficients of autoregression) are to be calculated.
-        The index of the DataFrame should be a DatetimeIndex or similar time-based index.
+    This function iterates over each column of the input DataFrame and applies
+    the `get_lagged_params` function to it, typically to calculate autoregressive
+    lagged t-statistics or coefficients.
+
+    Args:
+        df (pandas.DataFrame): A DataFrame where each column is a time series.
+                               Index should be time-based (e.g., DatetimeIndex).
 
     Returns:
-    --------
-    pd.DataFrame
-        A DataFrame where each column corresponds to an input column from `df`,
-        and the rows are the calculated lagged parameters (e.g., t-stats or betas)
-        for different numbers of lags (1 to 48, as per `get_lagged_params` default).
-        The index of the output DataFrame represents the number of lags.
+        pandas.DataFrame: A DataFrame where columns correspond to the input DataFrame's columns,
+                          and rows are indexed by the lag number. Values are the
+                          calculated lagged parameters (e.g., t-stats or betas from
+                          `get_lagged_params`).
     """
     df_ts = {}
     for col_name in df.columns: # Iterate over column names for clarity
