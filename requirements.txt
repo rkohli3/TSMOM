@@ -1,0 +1,12 @@
+pandas>=1.3.0,<2.0.0
+numpy>=1.20.0,<2.0.0
+plotly>=5.0.0,<6.0.0
+statsmodels>=0.13.0,<0.14.0
+pyfolio>=0.9.0,<0.10.0
+empyrical>=0.5.0,<0.6.0
+yfinance>=0.1.60,<0.2.0
+arch>=5.0.0,<6.0.0
+requests>=2.25.0,<3.0.0
+scipy>=1.7.0,<2.0.0
+matplotlib>=3.4.0,<4.0.0
+pandas-datareader>=0.10.0,<0.11.0
