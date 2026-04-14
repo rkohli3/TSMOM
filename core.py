@@ -245,7 +245,7 @@ def get_excess_rets(data, freq='d', kind='arth', shift=1, data_type='returns'):
     start_date = rets.index[0]
 
     if freq == 'm':
-        rets.index = rets.index.to_period(freq)
+        rets.index = rets.index.to_period('M')
 
     rets = rets.iloc[1:] if isinstance(rets, pd.Series) else rets.iloc[1:, :]
 
@@ -305,7 +305,7 @@ def get_lagged_params(y, param='t', nlags=24, name=None):
     results = {}
     for lag in range(1, nlags + 1):
         reg = sm.OLS(y.iloc[lag:], y.shift(lag).dropna()).fit()
-        results[lag] = reg.tvalues[0] if param == 't' else reg.params[0]
+        results[lag] = reg.tvalues.iloc[0] if param == 't' else reg.params.iloc[0]
 
     out = pd.Series(results)
     out.name = name
